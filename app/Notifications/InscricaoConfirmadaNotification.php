@@ -51,7 +51,7 @@ class InscricaoConfirmadaNotification extends Notification implements ShouldQueu
         $base64Svg = base64_encode($qrCodeSvg);
 
         return (new MailMessage)
-                    ->subject('Inscrição Confirmada! 🎉')
+                    ->subject('Inscrição Confirmada!')
                     ->greeting('Olá, ' . $notifiable->name . '!')
                     ->line('A tua inscrição no evento "' . $this->evento->titulo . '" foi realizada com sucesso.')
                     ->line('Data do Evento: ' . Carbon::parse($this->evento->data_evento)->format('d/m/Y H:i'))

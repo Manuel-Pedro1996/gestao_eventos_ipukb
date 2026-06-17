@@ -8,6 +8,7 @@ mkdir -p /var/www/html/storage/framework/sessions
 mkdir -p /var/www/html/storage/framework/views
 
 # 2. Forçar a criação do link simbólico com permissão em tempo de execução
+rm -rf /var/www/html/public/storage
 php artisan storage:link --force
 
 # 3. Dar controlo total ao utilizador do Apache (www-data)

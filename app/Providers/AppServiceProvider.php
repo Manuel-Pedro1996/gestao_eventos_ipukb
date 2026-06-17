@@ -15,7 +15,6 @@ use App\Models\User;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Route;
 use Livewire\Livewire;
-use Livewire\Mechanisms\HandleRequests\DisableBrowserCacheMiddleware;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -45,7 +44,7 @@ class AppServiceProvider extends ServiceProvider
                         return Route::post('/livewire/update', $handle)
                             ->middleware([
                                 'web',
-                                'Livewire\Mechanisms\HandleRequests\DisableBrowserCacheMiddleware',
+                
                             ]);
                     });
                 }

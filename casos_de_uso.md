@@ -29,7 +29,7 @@ graph LR
 
     %% Casos de Uso - GESTOR DE EVENTOS
     Gestor --- UC_M_Events(Criar, Editar e Publicar Eventos<br><b>criar_eventos / editar_eventos</b>)
-    Gestor --- UC_M_Inscricoes(visualizar e cancelar inscricoes <br><b>gerir_salas</b>)
+    Gestor --- UC_M_Inscricoes(visualizar e222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222 cancelar inscricoes <br><b>gerir_salas</b>)
 
     %% Casos de Uso - ADMINISTRADOR (Controlo Total)
     Admin --- UC_M_Users(Gerir Funcionários e Contas do Sistema<br><b>criar_users / eliminar_users</b>)
