@@ -2,7 +2,7 @@
 FROM node:20-alpine as assets_builder
 WORKDIR /app
 COPY . .
-RUN npm install && npm run build
+#RUN npm install && npm run build
 
 # Estágio Final - PHP 8.4 Apache
 FROM php:8.4-apache
