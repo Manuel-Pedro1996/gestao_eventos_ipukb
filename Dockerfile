@@ -2,7 +2,7 @@
 FROM node:20-alpine as assets_builder
 WORKDIR /app
 COPY . .
-#RUN npm install && npm run build
+# Nota: Os assets já são compilados localmente e enviados via Git
 
 # Estágio Final - PHP 8.4 Apache
 FROM php:8.4-apache
@@ -28,10 +28,13 @@ COPY --from=assets_builder /app/public/build ./public/build
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader
 
-# Permissões
+# Criar o Link Simbólico no estágio correto
+RUN php artisan storage:link
+
+# Permissões iniciais
 RUN chown -R www-data:www-data storage bootstrap/cache
 
-# Porta do Koyeb
+# Porta do Render/Koyeb
 EXPOSE 80
 
 # Script de Inicialização
