@@ -13,6 +13,9 @@ use Illuminate\Auth\Events\Registered;
 use App\Notifications\BoasVindasNotification;
 use App\Models\User;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Route;
+use Livewire\Livewire;
+use Livewire\Mechanisms\HandleRequests\DisableBrowserCache;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -31,20 +34,29 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
 
-        // Força HTTPS se o APP_ENV for production
+        // Força HTTPS e corrige o upload do Livewire se estiver em produção
         if (config('app.env') === 'production') {
             URL::forceScheme('https');
+            
+            // Corrige o bug do Livewire com Mixed Content bloqueando uploads
+            Livewire::setUpdateRoute(function ($handle) {
+                return Route::post('/livewire/update', $handle)
+                    ->middleware([
+                        'web',
+                        DisableBrowserCache::class, // <-- O código agora fica curto e limpo!
+                    ]);
+            });
         }
 
         Gate::before(function ($user, $ability) {
-        return $user->hasRole('super_admin') ? true : null;
-    });
+            return $user->hasRole('super_admin') ? true : null;
+        });
 
         Event::listen(Registered::class, function (Registered $event) {
-        /** @var User $user */
-        $user = $event->user;
-        $user->notify(new BoasVindasNotification());
-    });
+            /** @var User $user */
+            $user = $event->user;
+            $user->notify(new BoasVindasNotification());
+        });
     }
 
     /**
