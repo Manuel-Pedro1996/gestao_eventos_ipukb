@@ -122,7 +122,7 @@ new class extends Component
 <div class="w-full">
     
     {{-- HEADER FIXO (STICKY) --}}
-    <div class="sticky top-0 z-20 bg-gray-50/80 dark:bg-[#09090b]/80 backdrop-blur-md px-6 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800">
+    <div class="sticky top-0 z-10 bg-gray-50/80 dark:bg-[#09090b]/80 backdrop-blur-md px-6 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                 <h1 class="text-2xl font-black tracking-tight text-blue-800 dark:text-blue-500 uppercase">EVENTOS</h1>

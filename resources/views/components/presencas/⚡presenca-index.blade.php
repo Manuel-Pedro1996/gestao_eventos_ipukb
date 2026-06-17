@@ -47,7 +47,7 @@ new class extends Component {
 <div class="w-full">
     
     {{-- HEADER FIXO (STICKY) --}}
-    <div class="sticky top-0 z-20 bg-gray-50/95 dark:bg-[#09090b]/95 backdrop-blur-md px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+    <div class="sticky top-0 z-10 bg-gray-50/95 dark:bg-[#09090b]/95 backdrop-blur-md px-6 py-4 border-b border-gray-200 dark:border-gray-800">
         <div class="flex flex-row justify-between items-center gap-4">
             <div class="min-w-0">
                 <h1 class="text-xl md:text-2xl font-black tracking-tight text-blue-800 dark:text-blue-500 uppercase truncate">CONTROLO DE PRESENÇAS</h1>
