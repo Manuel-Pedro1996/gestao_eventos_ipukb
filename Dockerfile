@@ -2,7 +2,6 @@
 FROM node:20-alpine as assets_builder
 WORKDIR /app
 COPY . .
-# Nota: Os assets já são compilados localmente e enviados via Git
 
 # Estágio Final - PHP 8.4 Apache
 FROM php:8.4-apache
@@ -13,6 +12,11 @@ RUN apt-get update && apt-get install -y \
     libzip-dev libicu-dev zip unzip git \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo_mysql gd zip intl bcmath opcache
+
+# Configurar limites de upload diretamente no PHP do container (Evita Erro 500)
+RUN echo "upload_max_filesize = 32M" >> /usr/local/etc/php/php.ini \
+    && echo "post_max_size = 32M" >> /usr/local/etc/php/php.ini \
+    && echo "memory_limit = 256M" >> /usr/local/etc/php/php.ini
 
 # Configuração do Apache
 RUN a2enmod rewrite
@@ -28,13 +32,10 @@ COPY --from=assets_builder /app/public/build ./public/build
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader
 
-# Criar o Link Simbólico no estágio correto
-RUN php artisan storage:link
-
 # Permissões iniciais
 RUN chown -R www-data:www-data storage bootstrap/cache
 
-# Porta do Render/Koyeb
+# Porta do Render
 EXPOSE 80
 
 # Script de Inicialização
