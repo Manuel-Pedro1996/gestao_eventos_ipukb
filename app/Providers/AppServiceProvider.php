@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Auth\Events\Registered;
 use App\Notifications\BoasVindasNotification;
 use App\Models\User;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +30,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+
+        // Força HTTPS se o APP_ENV for production
+        if (config('app.env') === 'production') {
+            URL::forceScheme('https');
+        }
 
         Gate::before(function ($user, $ability) {
         return $user->hasRole('super_admin') ? true : null;
