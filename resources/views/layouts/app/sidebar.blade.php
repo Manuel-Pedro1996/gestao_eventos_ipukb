@@ -110,7 +110,7 @@
                 </flux:dropdown>
             </flux:header>
 
-            {{-- CONTEÚDO DINÂMICO (SLOT): Só esta caixa é que vai rolar --}}
+            
             <main class="flex-1 overflow-y-auto focus:outline-none w-full">
                 {{ $slot }}
             </main>

@@ -1,18 +1,29 @@
 <x-layouts::auth :title="__('Registar-se')">
-    {{-- Container com Gradiente e Borda Estilo Folha --}}
-    <div class="relative bg-gradient-to-br from-cyan-400 to-blue-600 p-8 shadow-2xl rounded-tr-[80px] rounded-bl-[20px] rounded-br-[20px] rounded-tl-[20px] text-white">
+    {{-- Container Adaptável (Modo Claro: Fundo Branco/Borda Suave | Modo Escuro: Fundo Zinco Profundo) --}}
+    <div class="relative bg-white dark:bg-zinc-950 border border-gray-200/80 dark:border-zinc-800/50 p-8 sm:p-10 shadow-2xl rounded-tr-[60px] rounded-bl-[20px] rounded-br-[20px] rounded-tl-[20px] transition-colors duration-200 w-full max-w-md">
+       
+        {{-- BOTÃO VOLTAR PARA A WELCOME --}}
+        <div class="absolute top-5 left-5">
+            <flux:button :href="route('home')" variant="subtle" size="sm" icon="arrow-left" square wire:navigate inset="top left" title="Voltar ao Início" />
+        </div>
         
         <div class="flex flex-col gap-6">
-            <div class="text-center space-y-2">
-                <h2 class="text-3xl font-black uppercase tracking-widest text-white italic">Sign Up</h2>
-                <p class="text-cyan-100 text-sm italic">{{ __('Informe as tuas informações para criar conta') }}</p>
+            {{-- Header Suave e Moderno unificado com o Sign In --}}
+            <div class="text-center space-y-1.5">
+                <h2 class="text-2xl font-black uppercase tracking-wider text-gray-900 dark:text-zinc-100 font-sans">
+                    {{ __('Sign Up') }}
+                </h2>
+                <p class="text-gray-500 dark:text-zinc-400 text-sm">
+                    {{ __('Informe as suas informações para criar conta') }}
+                </p>
             </div>
 
-            <x-auth-session-status class="text-center text-white bg-white/20 rounded-lg py-2" :status="session('status')" />
+            <x-auth-session-status class="text-center text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/50 dark:border-emerald-900/30 rounded-xl py-2.5 font-medium" :status="session('status')" />
 
             <form method="POST" action="{{ route('register.store') }}" class="flex flex-col gap-5">
                 @csrf
                 
+                {{-- CAMPO: NOME --}}
                 <flux:input
                     name="name"
                     :label="__('Nome completo')"
@@ -21,10 +32,10 @@
                     required
                     autofocus
                     icon="user"
-                    class="!bg-transparent !border-black !text-white placeholder:text-cyan-100/50 rounded-full border-2"
-                    :placeholder="__('nome do documento')"
+                    placeholder="Ex: Manuel Pedro"
                 />
 
+                {{-- CAMPO: EMAIL --}}
                 <flux:input
                     name="email"
                     :label="__('Email')"
@@ -32,44 +43,46 @@
                     type="email"
                     required
                     icon="envelope"
-                    class="!bg-transparent !border-black !text-white placeholder:text-cyan-100/50 rounded-full border-2"
-                    placeholder="email@example.com"
+                    placeholder="exemplo@gmail.com"
                 />
 
-                <div class="grid grid-cols-1 gap-4">
+                {{-- COMPONENTES DE PALAVRA PASSE LADO A LADO --}}
+                <div class="grid grid-cols-1 sm:grid-cols-1 gap-4">
                     <flux:input
                         name="password"
                         :label="__('Palavra passe')"
                         type="password"
                         required
                         icon="lock-closed"
-                        class="!bg-transparent !border-black !text-white placeholder:text-cyan-100/50 rounded-full border-2"
-                        :placeholder="__('informe a palavra passe')"
+                        placeholder="••••••••"
                         viewable
                     />
 
                     <flux:input
                         name="password_confirmation"
-                        :label="__('Confirmar palavra passe')"
+                        :label="__('Confirmar')"
                         type="password"
                         required
                         icon="check-badge"
-                        class="!bg-transparent !border-black !text-white placeholder:text-cyan-100/50 rounded-full border-2"
-                        :placeholder="__('Confirmar a palavra passe')"
+                        placeholder="••••••••"
                         viewable
                     />
                 </div>
 
+                {{-- BOTÃO REGISTER (Combinando com o botão do login em azul premium) --}}
                 <div class="pt-2">
-                    <flux:button type="submit" class="w-full !bg-black !text-blue-400 hover:!bg-zinc-900 rounded-full font-black text-xl py-6 shadow-xl uppercase tracking-tighter transition-transform active:scale-95">
-                        REGISTER
-                    </flux:button>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm py-3 rounded-xl shadow-lg shadow-blue-500/10 dark:shadow-none uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer">
+                        {{ __('Registar') }}
+                    </button>
                 </div>
             </form>
 
-            <div class="text-xs text-center text-cyan-100 italic">
-                <span>{{ __('Já tenho uma conta') }}</span>
-                <flux:link :href="route('login')" class="text-white font-bold hover:underline" wire:navigate>{{ __('Entrar aqui') }}</flux:link>
+            {{-- LINK DE RETORNO AO LOGIN --}}
+            <div class="text-sm text-center text-gray-500 dark:text-zinc-500 mt-1">
+                <span>{{ __('Já tenho uma conta?') }}</span>
+                <flux:link :href="route('login')" class="text-blue-600 dark:text-blue-400 font-semibold hover:underline ml-1" wire:navigate>
+                    {{ __('Entrar aqui') }}
+                </flux:link>
             </div>
         </div>
     </div>

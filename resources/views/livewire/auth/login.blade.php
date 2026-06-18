@@ -1,100 +1,90 @@
 <x-layouts::auth :title="__('Entrar')">
-    {{-- Container com Gradiente e Borda Estilo Folha --}}
-    <div class="relative bg-gradient-to-br bg-blue-800  p-8 shadow-2xl rounded-tr-[80px] rounded-bl-[20px] rounded-br-[20px] rounded-tl-[20px] text-white">
+    {{-- Container Adaptável (Modo Claro: Fundo Branco | Modo Escuro: Fundo Zinco Profundo) --}}
+    <div class="relative bg-white dark:bg-zinc-950 border border-gray-200/80 dark:border-zinc-800/50 p-8 sm:p-10 shadow-2xl rounded-tr-[60px] rounded-bl-[20px] rounded-br-[20px] rounded-tl-[20px] transition-colors duration-200 w-full max-w-md">
         
-        <div class="flex flex-col gap-6">
-            {{-- Header customizado --}}
-            <div class="text-center space-y-2">
-                <h2 class="text-3xl font-black uppercase tracking-widest text-black italic">Sign In</h2>
-                <p class="text-black text-sm italic">{{ __('Entrar com seu email e palavra passe') }}</p>
+        {{-- BOTÃO VOLTAR PARA A WELCOME --}}
+        <div class="absolute top-5 left-5">
+            <flux:button :href="route('home')" variant="subtle" size="sm" icon="arrow-left" square wire:navigate inset="top left" title="Voltar ao Início" />
+        </div>
+
+        <div class="flex flex-col gap-6 mt-4">
+            {{-- Header Suave e Moderno --}}
+            <div class="text-center space-y-1.5">
+                <h2 class="text-2xl font-black uppercase tracking-wider text-gray-900 dark:text-zinc-100 font-sans">
+                    {{ __('Sign In') }}
+                </h2>
+                <p class="text-gray-500 dark:text-zinc-400 text-sm">
+                    {{ __('Entrar com seu email e palavra passe') }}
+                </p>
             </div>
 
-            <x-auth-session-status class="text-center text-white bg-white/20 rounded-lg py-2" :status="session('status')" />
+            <x-auth-session-status class="text-center text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/50 dark:border-emerald-900/30 rounded-xl py-2.5 font-medium" :status="session('status')" />
 
             <form method="POST" action="{{ route('login.store') }}" class="flex flex-col gap-5">
                 @csrf
 
                 {{-- CAMPO: EMAIL --}}
-                <div class="flex flex-col gap-1.5">
-                    <label for="email" class="text-sm font-medium text-black px-1">{{ __('Email') }}</label>
-                    <div class="relative flex items-center">
-                        <span class="absolute left-4 text-cyan-100/70">
-                            {{-- Ícone Envelope --}}
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"></path></svg>
-                        </span>
-                        <input 
-                            type="email" 
-                            name="email" 
-                            id="email"
-                            value="{{ old('email') }}"
-                            required 
-                            autofocus
-                            placeholder="email@example.com"
-                            class="w-full bg-transparent border-2 border-black/30 focus:border-black text-black placeholder:text-cyan-100/50 rounded-full py-2.5 pl-12 pr-4 outline-none transition-colors"
-                        />
-                    </div>
-                    @error('email')
-                        <span class="text-xs text-red-200 px-2 mt-0.5">{{ $message }}</span>
-                    @enderror
-                </div>
+                <flux:input
+                    name="email"
+                    :label="__('Email')"
+                    :value="old('email')"
+                    type="email"
+                    required
+                    autofocus
+                    icon="envelope"
+                    placeholder="exemplo@gmail.com"
+                />
 
                 {{-- CAMPO: PALAVRA PASSE --}}
-                <div class="flex flex-col gap-1.5">
-                    <label for="password" class="text-sm font-medium text-black px-1">{{ __('Palavra passe') }}</label>
-                    <div class="relative flex items-center">
-                        <span class="absolute left-4 text-cyan-100/70">
-                            {{-- Ícone Cadeado --}}
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"></path></svg>
-                        </span>
-                        <input 
-                            type="password" 
-                            name="password" 
-                            id="password"
-                            required 
+                <div class="flex flex-col gap-1">
+                    <div class="relative">
+                        <flux:input
+                            name="password"
+                            :label="__('Palavra passe')"
+                            type="password"
+                            required
                             autocomplete="current-password"
-                            placeholder="{{ __('informe a palavra passe') }}"
-                            class="w-full bg-transparent border-2 border-black/30 focus:border-black text-black placeholder:text-cyan-100/50 rounded-full py-2.5 pl-12 pr-4 outline-none transition-colors"
+                            icon="lock-closed"
+                            placeholder="••••••••••••"
+                            viewable
                         />
                     </div>
-                    @error('password')
-                        <span class="text-xs text-red-200 px-2 mt-0.5">{{ $message }}</span>
-                    @enderror
-
+                    
                     @if (Route::has('password.request'))
-                        <div class="flex justify-end mt-1">
-                            <a class="text-xs text-black hover:text-white underline italic transition-colors" href="{{ route('password.request') }}" wire:navigate>
-                                {{ __('Recuperar a palavra passe?') }}
+                        <div class="flex justify-end mt-1 px-1">
+                            <a class="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium transition-colors" href="{{ route('password.request') }}" wire:navigate>
+                                {{ __('Esqueceu a palavra passe?') }}
                             </a>
                         </div>
                     @endif
                 </div>
 
                 {{-- LEMBRAR-ME --}}
-                <div class="flex items-center justify-between px-1 py-1">
-                    <label class="inline-flex items-center cursor-pointer select-none gap-2 text-sm text-black">
+                <div class="flex items-center px-1 py-0.5">
+                    <label class="inline-flex items-center cursor-pointer select-none gap-2 text-sm text-gray-600 dark:text-zinc-400 font-medium">
                         <input 
                             type="checkbox" 
                             name="remember" 
-                            class="w-4 h-4 rounded border-black/30 text-blue-600 focus:ring-0 bg-transparent"
+                            class="w-4 h-4 rounded border-gray-300 dark:border-zinc-700 text-blue-600 focus:ring-0 bg-transparent dark:bg-zinc-900"
                         />
-                        <span>{{ __('Lembrar-me') }}</span>
+                        <span>{{ __('Manter sessão iniciada') }}</span>
                     </label>
                 </div>
 
                 {{-- BOTÃO ENTRAR --}}
-                <div class="pt-1">
-                    <button type="submit" class="w-full bg-black text-blue-400 hover:bg-zinc-900 font-black text-xl py-3.5 rounded-full shadow-xl uppercase tracking-tighter transition-all active:scale-[0.98] cursor-pointer">
-                        Entrar
+                <div class="pt-2">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm py-3 rounded-xl shadow-lg shadow-blue-500/10 dark:shadow-none uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer">
+                        {{ __('Entrar') }}
                     </button>
                 </div>
             </form>
 
             {{-- LINK DE REGISTO --}}
             @if (Route::has('register'))
-                <div class="text-xs text-center text-black italic mt-2">
+                <div class="text-sm text-center text-gray-500 dark:text-zinc-500 mt-1">
                     <span>{{ __('Não tem uma conta?') }}</span>
-                    <a href="{{ route('register') }}" class="text-black font-bold hover:underline ml-1" wire:navigate>
-                        Registar aqui
+                    <a href="{{ route('register') }}" class="text-blue-600 dark:text-blue-400 font-semibold hover:underline ml-1" wire:navigate>
+                        {{ __('Registar aqui') }}
                     </a>
                 </div>
             @endif
