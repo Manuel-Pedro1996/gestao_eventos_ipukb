@@ -1,6 +1,6 @@
 <x-layouts::auth :title="__('Entrar')">
     {{-- Container com Gradiente e Borda Estilo Folha --}}
-    <div class="relative bg-gradient-to-br from-cyan-400 to-blue-600 p-8 shadow-2xl rounded-tr-[80px] rounded-bl-[20px] rounded-br-[20px] rounded-tl-[20px] text-white">
+    <div class="relative bg-gradient-to-br bg-blue-800  p-8 shadow-2xl rounded-tr-[80px] rounded-bl-[20px] rounded-br-[20px] rounded-tl-[20px] text-white">
         
         <div class="flex flex-col gap-6">
             {{-- Header customizado --}}

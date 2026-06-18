@@ -38,7 +38,7 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
             
             // Executa após todos os Providers estarem registados
-            $this->app->booted(function () {
+          /*  $this->app->booted(function () {
                 if (class_exists(Livewire::class)) {
                     Livewire::setUpdateRoute(function ($handle) {
                         return Route::post('/livewire/update', $handle)
@@ -48,7 +48,7 @@ class AppServiceProvider extends ServiceProvider
                             ]);
                     });
                 }
-            });
+            });*/
         }
 
         Gate::before(function ($user, $ability) {
