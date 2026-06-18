@@ -35,7 +35,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Força HTTPS e corrige o upload do Livewire se estiver em produção
        if (config('app.env') === 'production') {
-            URL::forceScheme('https');
+            //URL::forceScheme('https');
             
             // Executa após todos os Providers estarem registados
           /*  $this->app->booted(function () {
