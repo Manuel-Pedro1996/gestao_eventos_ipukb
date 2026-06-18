@@ -29,26 +29,16 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
+    /**
+     * Bootstrap any application services.
+     */
     public function boot(): void
     {
         $this->configureDefaults();
 
-        // Força HTTPS e corrige o upload do Livewire se estiver em produção
-       if (config('app.env') === 'production') {
-            //URL::forceScheme('https');
-            
-            // Executa após todos os Providers estarem registados
-          /*  $this->app->booted(function () {
-                if (class_exists(Livewire::class)) {
-                    Livewire::setUpdateRoute(function ($handle) {
-                        return Route::post('/livewire/update', $handle)
-                            ->middleware([
-                                'web',
-                
-                            ]);
-                    });
-                }
-            });*/
+        // Garante links e uploads seguros em produção (Render)
+        if (config('app.env') === 'production') {
+            URL::forceScheme('https');
         }
 
         Gate::before(function ($user, $ability) {
