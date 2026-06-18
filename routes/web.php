@@ -54,13 +54,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 });
 
-Route::get('/debug-url', function () {
-    return response()->json([
-        'url' => url('/'),
-        'secure' => request()->isSecure(),
-        'scheme' => request()->getScheme(),
-        'app_url' => config('app.url'),
-    ]);
-});
+
 
 require __DIR__.'/settings.php';
