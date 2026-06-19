@@ -30,6 +30,8 @@ class InscricaoCanceladaNotification extends Notification implements ShouldQueue
                     ->greeting('Olá, ' . $notifiable->name . '!')
                     ->line('Confirmamos que a tua inscrição no evento "' . $this->evento->titulo . '" foi cancelada.')
                     ->line('Se isto foi um erro, podes voltar a inscrever-te a qualquer momento na nossa plataforma.')
-                    ->action('Ver Outros Eventos', url('/eventos'));
+                    
+                    // --- CORREÇÃO: Mapeado com a rota correta do teu web.php ---
+                    ->action('Ver Outros Eventos', route('eventos.index'));
     }
 }

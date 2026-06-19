@@ -40,7 +40,10 @@ class BoasVindasNotification extends Notification implements ShouldQueue
                     ->subject('Bem-vindo à nossa Plataforma!')
                     ->line('A tua conta foi criada com sucesso no sistema de Gestão de Atividades.')
                     ->line('Agora já podes inscrever-te nos melhores eventos de Tecnologia e Programação.')
-                    ->action('Aceder à Minha Conta', url('/login'))
+                    
+                    // --- CORREÇÃO: Usar o nome correto da rota de Login ---
+                    ->action('Aceder à Minha Conta', route('login'))
+                    
                     ->line('Se tiveres alguma dúvida, responde diretamente a este email. Estamos aqui para ajudar!');
     }
 

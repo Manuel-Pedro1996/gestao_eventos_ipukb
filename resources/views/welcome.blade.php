@@ -102,7 +102,7 @@
                             
                             <div class="flex items-center justify-between pt-4 border-t border-zinc-50 dark:border-zinc-800">
                                 <span class="text-[11px] text-zinc-400 truncate max-w-[120px]">{{ $evento->local }}</span>
-                                <a href="{{ route('eventos.index') }}" class="text-sm font-bold text-blue-600">Ver mais →</a>
+                                <a href="{{ route('eventos.index') }}" class="text-sm font-bold text-blue-600">Ver detalhes →</a>
                             </div>
                         </div>
                     </article>
