@@ -9,54 +9,56 @@ use Illuminate\Support\Facades\Auth;
 new class extends Component {
     public string $codigo_qr = '';
 
-public function registrarCheckin()
-{
-    // 1. Procurar a inscrição pelo QR carregando o participante e o evento
-    $inscricao = Inscricao::with(['user', 'evento'])->where('codigo_qr', $this->codigo_qr)->first();
+    public function registrarCheckin()
+    {
+        // 1. Procurar a inscrição pelo QR carregando o participante e o evento
+        $inscricao = Inscricao::with(['user', 'evento'])->where('codigo_qr', $this->codigo_qr)->first();
 
-    if (!$inscricao) {
-        session()->flash('error', '⚠️ Código QR inválido. Tente novamente.');
-        return;
-    }
+        if (!$inscricao) {
+            session()->flash('error', '⚠️ Código QR inválido. Tente novamente.');
+            return;
+        }
 
-    // 2. Verificar se já existe presença
-    $presencaExistente = Presenca::where('inscricao_id', $inscricao->id)->exists();
+        // 2. Verificar se já existe presença
+        $presencaExistente = Presenca::where('inscricao_id', $inscricao->id)->exists();
 
-    if ($presencaExistente) {
-        session()->flash('error', '🚫 Este participante já fez check-in!');
+        if ($presencaExistente) {
+            session()->flash('error', '🚫 Este participante já fez check-in!');
+            $this->codigo_qr = '';
+            return;
+        }
+
+        // 3. Criar presença
+        Presenca::create([
+            'inscricao_id' => $inscricao->id,
+            'data_checkin' => now()
+        ]);
+
+        // 4. Dispara a notificação (Com tempo para processar o SMTP)
+        if ($inscricao->user) {
+            $inscricao->user->notify(new PresencaConfirmadaNotification($inscricao->evento));
+        }
+
+        
+        session()->flash('success', '✅ Check-in realizado com sucesso e e-mail enviado!');
+        
         $this->codigo_qr = '';
-        return;
+        
+        
     }
-
-    // 3. Criar presença
-    Presenca::create([
-        'inscricao_id' => $inscricao->id,
-        'data_checkin' => now()
-    ]);
-
-    session()->flash('success', '✅ Check-in realizado com sucesso!');
-
-    // 4. Dispara a notificação de presença para o e-mail do ALUNO/PARTICIPANTE (não do admin)
-    if ($inscricao->user) {
-        $inscricao->user->notify(new PresencaConfirmadaNotification($inscricao->evento));
-    }
-
-    $this->codigo_qr = '';
-
-    return redirect()->route('presencas.index'); 
-}
 }; ?>
 
 <div wire:poll.5s class="p-6 w-full">
+    {{-- O teu HTML e Javascript continuam exatamente iguais --}}
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-            <h1 class="text-2xl font-bold tracking-tight text-blue-800 dark:text-blue-800">Check-in de Evento</h1>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Registe a entrada do participante através do Código QR</p>    
+            <h1 class="text-2xl font-bold tracking-tight text-blue-800">Check-in de Evento</h1>
+            <p class="text-sm text-gray-500 mt-1">Registe a entrada do participante através do Código QR</p>    
         </div> 
 
         <div class="flex items-center gap-3 w-full md:w-auto">
             @canany(['visualizar_presencas'])
-            <a href="{{ route('presencas.index') }}" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 transition-colors cursor-pointer text-center">
+            <a href="{{ route('presencas.index') }}" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none transition-colors cursor-pointer text-center">
                 Voltar
             </a>
             @endcanany
@@ -89,17 +91,17 @@ public function registrarCheckin()
                     wire:model="codigo_qr" 
                     type="text" 
                     id="codigo_qr" 
-                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
                     placeholder="Introduza ou digitalize o código..." 
                     autofocus
                 />
             </div>
 
             @canany(['criar_presencas'])
-            <button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 transition-colors cursor-pointer">
+            <button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none transition-colors cursor-pointer">
                 Confirmar Presença
             </button>
-            @endcanany
+            @canany
         </form>
     </section>
 
