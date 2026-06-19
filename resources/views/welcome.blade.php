@@ -55,7 +55,10 @@
                 
                 <nav class="flex items-center gap-2">
                     @auth
+                         @canany(['visualizar_painel'])
                         <a href="{{ route('dashboard') }}" class="px-3 py-1.5 text-xs sm:text-sm font-medium border border-zinc-200 dark:border-zinc-700 rounded-full hover:bg-zinc-50 dark:hover:bg-zinc-800 transition">Painel</a>
+                        @endcanany
+                        <a href="{{ route('eventos.index') }}" class="px-3 py-1.5 text-xs sm:text-sm font-medium border border-zinc-200 dark:border-zinc-700 rounded-full hover:bg-zinc-50 dark:hover:bg-zinc-800 transition">Eventos</a>
                     @else
                         <a href="{{ route('login') }}" class="px-3 py-1.5 text-xs sm:text-sm font-medium hover:text-blue-600 transition">Entrar</a>
                         <a href="{{ route('register') }}" class="px-4 py-1.5 text-xs sm:text-sm font-semibold bg-blue-600 text-white rounded-full transition transform active:scale-95">Criar Conta</a>
