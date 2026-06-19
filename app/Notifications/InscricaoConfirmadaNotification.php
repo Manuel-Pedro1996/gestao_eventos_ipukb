@@ -4,7 +4,7 @@ namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Contracts\Queue\ShouldQueue;
+//use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\HtmlString;
 use Carbon\Carbon;
@@ -13,7 +13,7 @@ use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Writer;
 
-class InscricaoConfirmadaNotification extends Notification implements ShouldQueue
+class InscricaoConfirmadaNotification extends Notification
 {
     use Queueable;
 

@@ -4,10 +4,10 @@ namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Contracts\Queue\ShouldQueue;
+//use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class InscricaoCanceladaNotification extends Notification implements ShouldQueue
+class InscricaoCanceladaNotification extends Notification
 {
     use Queueable;
 
