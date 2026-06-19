@@ -44,7 +44,7 @@
                     type="email"
                     required
                     icon="envelope"
-                    placeholder="exemplo@gmail.com"
+                    placeholder="informe email verdadeiro"
                     class="text-gray-900 dark:text-white font-medium placeholder:text-gray-400 dark:placeholder:text-zinc-500"
                 />
 
