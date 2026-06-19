@@ -29,6 +29,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Volt::route('permissions/{permission}/edit', 'permissions.permission-edit')->middleware('can:editar_permissions')->name('permissions.edit');
 
     Volt::route('eventos', 'eventos.evento-index')->name('eventos.index');
+    Volt::route('eventos/{evento}', 'eventos.evento-show')->name('eventos.show');
     Volt::route('eventos/create', 'eventos.evento-create')->middleware('can:criar_eventos')->name('eventos.create');
     Volt::route('eventos/{evento}/edit', 'eventos.evento-edit')->middleware('can:editar_eventos')->name('eventos.edit');
 
