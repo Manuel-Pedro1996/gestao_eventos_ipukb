@@ -4,8 +4,14 @@ use Livewire\Volt\Component;
 use App\Models\Evento;
 
 new class extends Component {
-    // O Volt injeta o modelo automaticamente através do Route Model Binding
-    public Evento $evento; 
+    // Definimos a propriedade pública
+    public Evento $evento;
+
+    // Forçamos o Volt a mapear o parâmetro da URL da forma correta
+    public function mount(Evento $evento)
+    {
+        $this->evento = $evento;
+    }
 }; ?>
 
 <div class="py-12">
