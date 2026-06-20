@@ -11,7 +11,6 @@ new class extends Component {
 
     public function registrarCheckin()
     {
-        // 1. Procurar a inscrição pelo QR carregando o participante e o evento
         $inscricao = Inscricao::with(['user', 'evento'])->where('codigo_qr', $this->codigo_qr)->first();
 
         if (!$inscricao) {
@@ -19,7 +18,6 @@ new class extends Component {
             return;
         }
 
-        // 2. Verificar se já existe presença
         $presencaExistente = Presenca::where('inscricao_id', $inscricao->id)->exists();
 
         if ($presencaExistente) {
@@ -28,24 +26,21 @@ new class extends Component {
             return;
         }
 
-        // 3. Criar presença
         Presenca::create([
             'inscricao_id' => $inscricao->id,
             'data_checkin' => now()
         ]);
 
-        // 4. Dispara a notificação
         if ($inscricao->user) {
             $inscricao->user->notify(new PresencaConfirmadaNotification($inscricao->evento));
         }
 
         session()->flash('success', '✅ Check-in realizado com sucesso e e-mail enviado!');
-        
         $this->codigo_qr = '';
     }
 }; ?>
 
-<div class="p-6 w-full"> {{-- REMOVIDO o wire:poll global daqui --}}
+<div class="p-6 w-full">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
             <h1 class="text-2xl font-bold tracking-tight text-blue-800">Check-in de Evento</h1>
@@ -63,7 +58,6 @@ new class extends Component {
 
     <hr class="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700">
 
-    {{-- O wire:poll fica focado apenas aqui para limpar as mensagens de feedback --}}
     <div wire:poll.5s>
         @if (session()->has('success'))
             <div class="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400 text-center font-medium border border-green-200 dark:border-green-800" role="alert">
@@ -78,9 +72,30 @@ new class extends Component {
         @endif
     </div>
 
-    <section class="space-y-6">
+    {{-- Inicialização limpa via Alpine.js isolando completamente o scanner --}}
+    <section class="space-y-6" 
+             x-data="{
+                scanner: null,
+                initScanner() {
+                    if(this.scanner) { this.scanner.clear(); }
+                    
+                    this.scanner = new Html5QrcodeScanner('reader', { 
+                        fps: 15, 
+                        qrbox: 250,
+                        rememberLastUsedCamera: true
+                    });
+                    
+                    this.scanner.render((text) => {
+                        // Quando lê com sucesso: atualiza a propriedade do Livewire e executa a lógica
+                        @this.set('codigo_qr', text);
+                        @this.call('registrarCheckin');
+                    }, (err) => { });
+                }
+             }" 
+             x-init="initScanner()">
+
         <div class="flex justify-center bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-dashed border-gray-300 dark:border-gray-600">
-            {{-- ADICIONADO wire:ignore para o Livewire não interferir na câmara --}}
+            {{-- O wire:ignore garante que o Livewire nunca mexa nesta árvore DOM em tempo de execução --}}
             <div id="reader" wire:ignore class="w-full max-w-[300px] overflow-hidden rounded-lg"></div>
         </div>
 
@@ -105,31 +120,6 @@ new class extends Component {
         </form>
     </section>
 
+    {{-- Carregamento seguro da biblioteca externa --}}
     <script src="https://unpkg.com/html5-qrcode"></script>
-    <script>
-        // Inicialização limpa integrada ao ciclo do Livewire 3
-        document.addEventListener('livewire:navigated', () => {
-            function onScanSuccess(decodedText) {
-                @this.set('codigo_qr', decodedText);
-                @this.call('registrarCheckin');   
-            } 
-
-            function onScanError(errorMessage) {}
-
-            if (window.html5QrcodeScanner) {
-                window.html5QrcodeScanner.clear();
-            }
-
-            window.html5QrcodeScanner = new Html5QrcodeScanner(
-                "reader",
-                { 
-                    fps: 10, 
-                    qrbox: 250,
-                    rememberLastUsedCamera: true,
-                    supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
-                }
-            );
-            window.html5QrcodeScanner.render(onScanSuccess, onScanError);
-        });
-    </script>
 </div>
