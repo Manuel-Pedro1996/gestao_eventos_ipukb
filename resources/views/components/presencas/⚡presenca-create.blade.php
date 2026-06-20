@@ -34,22 +34,18 @@ new class extends Component {
             'data_checkin' => now()
         ]);
 
-        // 4. Dispara a notificação (Com tempo para processar o SMTP)
+        // 4. Dispara a notificação
         if ($inscricao->user) {
             $inscricao->user->notify(new PresencaConfirmadaNotification($inscricao->evento));
         }
 
-        
         session()->flash('success', '✅ Check-in realizado com sucesso e e-mail enviado!');
         
         $this->codigo_qr = '';
-        
-        
     }
 }; ?>
 
-<div wire:poll.5s class="p-6 w-full">
-    {{-- O teu HTML e Javascript continuam exatamente iguais --}}
+<div class="p-6 w-full"> {{-- REMOVIDO o wire:poll global daqui --}}
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
             <h1 class="text-2xl font-bold tracking-tight text-blue-800">Check-in de Evento</h1>
@@ -67,21 +63,25 @@ new class extends Component {
 
     <hr class="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700">
 
-    @if (session()->has('success'))
-        <div class="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400 text-center font-medium border border-green-200 dark:border-green-800" role="alert">
-            {{ session('success') }}
-        </div>
-    @endif
+    {{-- O wire:poll fica focado apenas aqui para limpar as mensagens de feedback --}}
+    <div wire:poll.5s>
+        @if (session()->has('success'))
+            <div class="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400 text-center font-medium border border-green-200 dark:border-green-800" role="alert">
+                {{ session('success') }}
+            </div>
+        @endif
 
-    @if (session()->has('error'))
-        <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400 text-center font-medium border border-red-200 dark:border-red-800 animate-pulse" role="alert">
-            {{ session('error') }}
-        </div>
-    @endif
+        @if (session()->has('error'))
+            <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400 text-center font-medium border border-red-200 dark:border-red-800 animate-pulse" role="alert">
+                {{ session('error') }}
+            </div>
+        @endif
+    </div>
 
     <section class="space-y-6">
         <div class="flex justify-center bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-dashed border-gray-300 dark:border-gray-600">
-            <div id="reader" class="w-full max-w-[300px] overflow-hidden rounded-lg"></div>
+            {{-- ADICIONADO wire:ignore para o Livewire não interferir na câmara --}}
+            <div id="reader" wire:ignore class="w-full max-w-[300px] overflow-hidden rounded-lg"></div>
         </div>
 
         <form wire:submit="registrarCheckin" class="space-y-5">
@@ -107,17 +107,29 @@ new class extends Component {
 
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script>
-        function onScanSuccess(decodedText) {
-            @this.set('codigo_qr', decodedText);
-            @this.call('registrarCheckin');   
-        } 
+        // Inicialização limpa integrada ao ciclo do Livewire 3
+        document.addEventListener('livewire:navigated', () => {
+            function onScanSuccess(decodedText) {
+                @this.set('codigo_qr', decodedText);
+                @this.call('registrarCheckin');   
+            } 
 
-        function onScanError(errorMessage) {}
+            function onScanError(errorMessage) {}
 
-        let html5QrcodeScanner = new Html5QrcodeScanner(
-            "reader",
-            { fps: 10, qrbox: 250 }
-        );
-        html5QrcodeScanner.render(onScanSuccess, onScanError);
+            if (window.html5QrcodeScanner) {
+                window.html5QrcodeScanner.clear();
+            }
+
+            window.html5QrcodeScanner = new Html5QrcodeScanner(
+                "reader",
+                { 
+                    fps: 10, 
+                    qrbox: 250,
+                    rememberLastUsedCamera: true,
+                    supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
+                }
+            );
+            window.html5QrcodeScanner.render(onScanSuccess, onScanError);
+        });
     </script>
 </div>
