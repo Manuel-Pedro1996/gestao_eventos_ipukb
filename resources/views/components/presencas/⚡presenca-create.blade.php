@@ -15,6 +15,7 @@ new class extends Component {
 
         if (!$inscricao) {
             session()->flash('error', '⚠️ Código QR inválido. Tente novamente.');
+            $this->dispatch('checkin-completed', status: 'error');
             return;
         }
 
@@ -23,6 +24,7 @@ new class extends Component {
         if ($presencaExistente) {
             session()->flash('error', '🚫 Este participante já fez check-in!');
             $this->codigo_qr = '';
+            $this->dispatch('checkin-completed', status: 'error');
             return;
         }
 
@@ -35,8 +37,10 @@ new class extends Component {
             $inscricao->user->notify(new PresencaConfirmadaNotification($inscricao->evento));
         }
 
-        session()->flash('success', '✅ Check-in realizado com sucesso e e-mail enviado!');
+        session()->flash('success', '✅ Check-in realizado com sucesso!');
         $this->codigo_qr = '';
+        
+        $this->dispatch('checkin-completed', status: 'success');
     }
 }; ?>
 
@@ -58,45 +62,23 @@ new class extends Component {
 
     <hr class="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700">
 
-    <div wire:poll.5s>
+    <div id="alerts-container">
         @if (session()->has('success'))
-            <div class="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400 text-center font-medium border border-green-200 dark:border-green-800" role="alert">
+            <div class="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400 text-center font-medium border border-green-200 dark:border-green-800">
                 {{ session('success') }}
             </div>
         @endif
 
         @if (session()->has('error'))
-            <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400 text-center font-medium border border-red-200 dark:border-red-800 animate-pulse" role="alert">
+            <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400 text-center font-medium border border-red-200 dark:border-red-800 animate-pulse">
                 {{ session('error') }}
             </div>
         @endif
     </div>
 
-    {{-- Inicialização limpa via Alpine.js isolando completamente o scanner --}}
-    <section class="space-y-6" 
-             x-data="{
-                scanner: null,
-                initScanner() {
-                    if(this.scanner) { this.scanner.clear(); }
-                    
-                    this.scanner = new Html5QrcodeScanner('reader', { 
-                        fps: 15, 
-                        qrbox: 250,
-                        rememberLastUsedCamera: true
-                    });
-                    
-                    this.scanner.render((text) => {
-                        // Quando lê com sucesso: atualiza a propriedade do Livewire e executa a lógica
-                        @this.set('codigo_qr', text);
-                        @this.call('registrarCheckin');
-                    }, (err) => { });
-                }
-             }" 
-             x-init="initScanner()">
-
+    <section class="space-y-6">
         <div class="flex justify-center bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-dashed border-gray-300 dark:border-gray-600">
-            {{-- O wire:ignore garante que o Livewire nunca mexa nesta árvore DOM em tempo de execução --}}
-            <div id="reader" wire:ignore class="w-full max-w-[300px] overflow-hidden rounded-lg"></div>
+            <div id="reader" wire:ignore class="w-full max-w-[300px] overflow-hidden rounded-lg aspect-square bg-black"></div>
         </div>
 
         <form wire:submit="registrarCheckin" class="space-y-5">
@@ -120,6 +102,39 @@ new class extends Component {
         </form>
     </section>
 
-    {{-- Carregamento seguro da biblioteca externa --}}
     <script src="https://unpkg.com/html5-qrcode"></script>
+    <script>
+        document.addEventListener('livewire:navigated', () => {
+            let html5QrCode = new Html5Qrcode("reader");
+            let isProcessing = false;
+
+            const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+
+            // Inicia o stream da câmara traseira automaticamente sem botões adicionais
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                config,
+                (decodedText) => {
+                    if (isProcessing) return;
+                    
+                    isProcessing = true; // Trava o scanner para não duplicar requisições
+                    
+                    @this.set('codigo_qr', decodedText);
+                    @this.call('registrarCheckin');
+                },
+                (errorMessage) => { /* Tratamento silencioso de frames vazios */ }
+            ).catch(err => console.error("Erro ao iniciar câmara:", err));
+
+            // Quando o Livewire termina de processar a resposta 200 que vimos nos logs
+            window.addEventListener('checkin-completed', (event) => {
+                isProcessing = false;
+                
+                // Limpa os alertas após 4 segundos nativamente
+                setTimeout(() => {
+                    const container = document.getElementById('alerts-container');
+                    if (container) container.innerHTML = '';
+                }, 4000);
+            });
+        });
+    </script>
 </div>
