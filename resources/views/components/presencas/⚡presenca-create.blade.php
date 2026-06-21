@@ -15,6 +15,7 @@ new class extends Component {
 
         if (!$inscricao) {
             session()->flash('error', '⚠️ Código QR inválido. Tente novamente.');
+            // Envia o status no array para o evento customizado do Livewire 3
             $this->dispatch('checkin-completed', status: 'error');
             return;
         }
@@ -78,7 +79,8 @@ new class extends Component {
 
     <section class="space-y-6">
         <div class="flex justify-center bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-dashed border-gray-300 dark:border-gray-600">
-            <div id="reader" wire:ignore class="w-full max-w-[300px] overflow-hidden rounded-lg aspect-square bg-black"></div>
+            {{-- CORRIGIDO: Removido o bg-black para a câmara poder renderizar o feed de vídeo --}}
+            <div id="reader" wire:ignore class="w-full max-w-[300px] overflow-hidden rounded-lg aspect-square"></div>
         </div>
 
         <form wire:submit="registrarCheckin" class="space-y-5">
@@ -103,44 +105,40 @@ new class extends Component {
     </section>
 
     <script src="https://unpkg.com/html5-qrcode"></script>
-<script>
-    document.addEventListener('livewire:navigated', () => {
-        let html5QrCode = new Html5Qrcode("reader");
-        let isProcessing = false;
+    <script>
+        document.addEventListener('livewire:navigated', () => {
+            let html5QrCode = new Html5Qrcode("reader");
+            let isProcessing = false;
 
-        const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+            const config = { fps: 10, qrbox: { width: 220, height: 220 } };
 
-        html5QrCode.start(
-            { facingMode: "environment" }, 
-            config,
-            (decodedText) => {
-                // Se já estiver a processar um scan, ignora completamente qualquer nova leitura
-                if (isProcessing) return;
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                config,
+                (decodedText) => {
+                    if (isProcessing) return;
+                    
+                    // Bloqueio imediato no front-end para evitar leituras duplicadas seguidas
+                    isProcessing = true; 
+
+                    @this.set('codigo_qr', decodedText);
+                    @this.call('registrarCheckin');
+                },
+                (errorMessage) => { /* Silencioso */ }
+            ).catch(err => console.error("Erro ao iniciar câmara:", err));
+
+            window.addEventListener('checkin-completed', (event) => {
+                // Dá 3 segundos para afastar o código QR anterior antes de permitir um novo scan
+                setTimeout(() => {
+                    isProcessing = false;
+                }, 3000);
                 
-                // Bloqueio imediato no exato milésimo de segundo da leitura
-                isProcessing = true; 
-
-                // Envia os dados para o Livewire
-                @this.set('codigo_qr', decodedText);
-                @this.call('registrarCheckin');
-            },
-            (errorMessage) => { /* Silencioso */ }
-        ).catch(err => console.error("Erro ao iniciar câmara:", err));
-
-        // Escuta o evento de conclusão vindo do componente PHP
-        window.addEventListener('checkin-completed', (event) => {
-            // Só liberta o scanner para o próximo participante após 3 segundos
-            // Isto dá tempo para o utilizador afastar o telemóvel do código QR anterior
-            setTimeout(() => {
-                isProcessing = false;
-            }, 3000);
-            
-            // Limpa as mensagens de alerta do ecrã após 4 segundos
-            setTimeout(() => {
-                const container = document.getElementById('alerts-container');
-                if (container) container.innerHTML = '';
-            }, 4000);
+                // Limpa as caixas de alerta da interface após 4 segundos
+                setTimeout(() => {
+                    const container = document.getElementById('alerts-container');
+                    if (container) container.innerHTML = '';
+                }, 4000);
+            });
         });
-    });
-</script>
+    </script>
 </div>
