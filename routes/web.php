@@ -7,6 +7,7 @@ use Livewire\Volt\Volt;
 
 Route::view('/', 'welcome')->name('home');
 
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Volt::route('dashboard', 'dashboard')->middleware('can:visualizar_painel')->name('dashboard');
 
