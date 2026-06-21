@@ -3,6 +3,9 @@
 use Livewire\Component;
 use App\Models\Evento;
 use Livewire\WithFileUploads;
+// Importações necessárias para o SDK Nativo do Cloudinary
+use Cloudinary\Configuration\Configuration;
+use Cloudinary\Api\Upload\UploadApi;
 
 new class extends Component
 {
@@ -23,17 +26,27 @@ new class extends Component
             'titulo' => 'required|string|max:255',
             'descricao' => 'required|string',
             'local' => 'required|string',
-            'data_evento' => 'required|date|after:now',
             'data_evento' => 'required|date',
             'data_fim' => 'required|date|after_or_equal:data_evento',
             'vagas_disponiveis' => 'required|integer|min:0',
             'capacidade_maxima' => 'required|integer|min:1',
-            'foto' => 'nullable|image|max:2048',
+            'foto' => 'nullable|image|max:2048', // Máximo 2MB
         ]);
 
         $caminhoFoto = null;
+
+        // Se o utilizador submeteu uma foto, fazemos o upload direto para o Cloudinary
         if ($this->foto) {
-            $caminhoFoto = $this->foto->store('eventos', 'public');
+            // 1. Inicializa as configurações com a variável guardada no teu .env
+            Configuration::instance(env('CLOUDINARY_URL'));
+
+            // 2. Executa o upload usando o caminho real temporário do ficheiro no Fedora
+            $resultado = (new UploadApi())->upload($this->foto->getRealPath(), [
+                'folder' => 'eventos' // Organiza os banners dentro de uma pasta na cloud
+            ]);
+
+            // 3. Captura a URL pública e segura (HTTPS) gerada
+            $caminhoFoto = $resultado['secure_url'];
         }
 
         Evento::create([
@@ -43,13 +56,13 @@ new class extends Component
             'data_evento' => $this->data_evento,
             'data_fim' => $this->data_fim,
             'capacidade_maxima' => $this->capacidade_maxima,
-            'vagas_disponiveis' => $this->capacidade_maxima,
-            'foto' => $caminhoFoto,
+            'vagas_disponiveis' => $this->vagas_disponiveis, // Corrigido para associar o input real
+            'foto' => $caminhoFoto, // Salva a URL completa (ex: https://res.cloudinary.com/...)
             'organizador_id' => auth()->id(),
         ]);
 
         return redirect()->route('eventos.index')
-            ->with('success', 'Evento criado com sucesso!');
+            ->with('success', 'Evento criado com sucesso e imagem salva na nuvem!');
     }
 };
 ?>
@@ -81,11 +94,11 @@ new class extends Component
                     <div class="relative w-full h-48 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
                         <img src="{{ $foto->temporaryUrl() }}" class="w-full h-full object-cover">
                         <button type="button" wire:click="$set('foto', null)" class="absolute top-2 right-2 text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-full text-xs p-1.5 text-center inline-flex items-center shadow">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
                     </div>
                 @else
-                    <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 border-gray-300 dark:border-gray-600 dark:hover:border-gray-500">
+                    <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 border-gray-300 dark:border-gray-600 dark:hover:bg-gray-500">
                         <div class="flex flex-col items-center justify-center pt-5 pb-6">
                             <svg class="w-8 h-8 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                             <p class="text-sm text-gray-500 dark:text-gray-400 italic">Clique para carregar a foto do evento</p>

@@ -3,7 +3,9 @@
 use Livewire\Component;
 use App\Models\Evento;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\Storage;
+// Importações nativas da API do Cloudinary
+use Cloudinary\Configuration\Configuration;
+use Cloudinary\Api\Upload\UploadApi;
 
 new class extends Component
 {
@@ -18,7 +20,6 @@ new class extends Component
     public int $vagas_disponiveis = 0;
     public int $capacidade_maxima = 0;
     
-    // Deixamos 'foto' para o novo upload e 'fotoAtual' para exibir o que já existe
     public $foto;
     public $fotoAtual;
 
@@ -32,7 +33,7 @@ new class extends Component
         $this->data_fim = $evento->data_fim ? $evento->data_fim->format('Y-m-d\TH:i') : '';
         $this->vagas_disponiveis = $evento->vagas_disponiveis;
         $this->capacidade_maxima = $evento->capacidade_maxima;
-        $this->fotoAtual = $evento->foto; // Guardamos o caminho que vem do banco
+        $this->fotoAtual = $evento->foto; 
     }
 
     public function atualizar()
@@ -45,7 +46,7 @@ new class extends Component
             'data_fim' => 'required|date|after_or_equal:data_evento',
             'vagas_disponiveis' => 'required|integer|min:0',
             'capacidade_maxima' => 'required|integer|min:1',
-            'foto' => 'nullable|image|max:2048', // Valida apenas se houver novo upload
+            'foto' => 'nullable|image|max:2048', 
         ]);
 
         $dados = [
@@ -58,13 +59,30 @@ new class extends Component
             'capacidade_maxima' => $this->capacidade_maxima,
         ];
 
-        // Lógica da Foto:
+        // Lógica da Foto com Cloudinary:
         if ($this->foto) {
-            // Se subir uma nova, apaga a antiga do disco para não encher o Fedora de lixo
+            Configuration::instance(env('CLOUDINARY_URL'));
+            $uploadApi = new UploadApi();
+
+            // Se já tem foto anterior, extrai o public_id e destrói na Cloud externa
             if ($this->fotoAtual) {
-                Storage::disk('public')->delete($this->fotoAtual);
+                // Remove a extensão e pasta temporária para pegar apenas o nome do arquivo
+                $filename = pathinfo(basename($this->fotoAtual), PATHINFO_FILENAME);
+                $publicId = 'eventos/' . $filename;
+                
+                try {
+                    $uploadApi->destroy($publicId);
+                } catch (\Exception $e) {
+                    // Silencioso se a imagem não existir na nuvem
+                }
             }
-            $dados['foto'] = $this->foto->store('eventos', 'public');
+
+            // Envia a nova imagem
+            $resultado = $uploadApi->upload($this->foto->getRealPath(), [
+                'folder' => 'eventos'
+            ]);
+
+            $dados['foto'] = $resultado['secure_url'];
         }
 
         $this->evento->update($dados);
@@ -92,14 +110,12 @@ new class extends Component
 
     <hr class="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700">
 
-    <form wire:submit="atualizar"  enctype="multipart/form-data" class="space-y-5">
+    <form wire:submit="atualizar" enctype="multipart/form-data" class="space-y-5">
         
-        {{-- Área de Upload e Gestão do Banner (Flowbite) --}}
         <div>
             <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Banner do Evento</label>
             <div class="flex items-center justify-center w-full">
                 
-                {{-- Caso 1: Utilizador selecionou uma foto nova temporária --}}
                 @if ($foto instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile)
                     <div class="relative w-full h-48 rounded-lg overflow-hidden border border-blue-500 group">
                         <img src="{{ $foto->temporaryUrl() }}" class="w-full h-full object-cover">
@@ -114,10 +130,10 @@ new class extends Component
                         </button>
                     </div>
 
-                {{-- Caso 2: Já existe uma foto salva no banco --}}
                 @elseif ($fotoAtual)
                     <label class="relative w-full h-48 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600 cursor-pointer group block">
-                        <img src="{{ asset('storage/' . $fotoAtual) }}" class="w-full h-full object-cover transition duration-200 group-hover:brightness-75">
+                        {{-- CORRIGIDO: Removido o helper asset() local pois a foto já vem direto com URL HTTPS da cloud --}}
+                        <img src="{{ $fotoAtual }}" class="w-full h-full object-cover transition duration-200 group-hover:brightness-75">
                         
                         <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                             <div class="bg-blue-700 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 text-sm font-medium">
@@ -129,9 +145,8 @@ new class extends Component
                         <input type="file" wire:model="foto" class="hidden" accept="image/*" />
                     </label>
 
-                {{-- Caso 3: Não tem foto nenhuma --}}
                 @else
-                    <label class="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 border-gray-300 dark:border-gray-600 dark:hover:border-gray-500">
+                    <label class="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 border-gray-300 dark:border-gray-600 dark:hover:bg-gray-500">
                         <div class="flex flex-col items-center justify-center pt-5 pb-6">
                             <svg class="w-8 h-8 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                             <p class="text-sm text-gray-500 dark:text-gray-400 italic">Clique para adicionar foto</p>
@@ -184,7 +199,6 @@ new class extends Component
             </div>
         </div>
 
-        {{-- Vagas Atuais --}}
         <div>
             <div class="flex items-center gap-2 mb-2">
                 <label for="vagas_disponiveis" class="text-sm font-medium text-gray-900 dark:text-white">Vagas Atuais</label>
@@ -194,7 +208,6 @@ new class extends Component
             @error('vagas_disponiveis') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
         </div>
 
-        {{-- Botões de Acção --}}
         <div class="flex gap-3 pt-2">
             <a href="{{ route('eventos.index') }}" class="flex-1 text-center text-gray-900 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-700 transition-colors cursor-pointer">
                 Cancelar

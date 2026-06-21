@@ -189,24 +189,25 @@ new class extends Component
                 <div class="group flex flex-col border border-gray-200 dark:border-gray-700 shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 rounded-[2rem] bg-white dark:bg-gray-800 overflow-hidden">
                     
                     {{-- BANNER COM OVERLAY --}}
-                    <div class="relative w-full h-48 overflow-hidden bg-gray-100 dark:bg-gray-700">
-                        <img src="{{ $evento->foto ? asset('storage/' . $evento->foto) : asset('img/sem-foto.jpg') }}" 
-                             class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                        
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                        
-                        <div class="absolute top-4 left-4 flex flex-col gap-2 z-10">
-                            @if($jaInscrito)
-                                <span class="bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 uppercase">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Inscrito
-                                </span>
-                            @endif
-                            
-                            <span class="{{ $evento->vagas_disponiveis > 0 ? 'bg-blue-600' : 'bg-red-600' }} text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg uppercase">
-                                {{ $evento->vagas_disponiveis }} Vagas
-                            </span>
-                        </div>
-                    </div>
+<div class="relative w-full h-48 overflow-hidden bg-gray-100 dark:bg-gray-700">
+    <img src="{{ $evento->foto ?? 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=600' }}" 
+         class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+         alt="Banner do Evento">
+    
+    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+    
+    <div class="absolute top-4 left-4 flex flex-col gap-2 z-10">
+        @if($jaInscrito)
+            <span class="bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 uppercase">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Inscrito
+            </span>
+        @endif
+        
+        <span class="{{ $evento->vagas_disponiveis > 0 ? 'bg-blue-600' : 'bg-red-600' }} text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg uppercase">
+            {{ $evento->vagas_disponiveis }} Vagas
+        </span>
+    </div>
+</div>
 
                     {{-- CONTEÚDO --}}
                     <div class="p-5 flex flex-col flex-1 gap-3">
