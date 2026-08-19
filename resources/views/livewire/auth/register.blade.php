@@ -1,5 +1,5 @@
 <x-layouts::auth :title="__('Registar-se')">
-    <div class="relative bg-white dark:bg-zinc-950 border border-gray-200/80 dark:border-zinc-800/80 p-8 sm:p-10 shadow-2xl rounded-tr-[60px] rounded-bl-[20px] rounded-br-[20px] rounded-tl-[20px] transition-colors duration-200 w-full max-w-md">
+    <div class="relative bg-white dark:bg-zinc-950 border border-gray-300 dark:border-zinc-800 p-8 sm:p-10 shadow-2xl rounded-tr-[60px] rounded-bl-[20px] rounded-br-[20px] rounded-tl-[20px] transition-colors duration-200 w-full max-w-md antialiased">
        
         <div class="absolute top-5 left-5">
             <flux:button :href="route('home')" variant="subtle" size="sm" icon="arrow-left" square wire:navigate inset="top left" title="Voltar ao Início" />
@@ -10,12 +10,12 @@
                 <h2 class="text-2xl font-black uppercase tracking-wider text-gray-900 dark:text-white font-sans">
                     {{ __('Sign Up') }}
                 </h2>
-                <p class="text-gray-600 dark:text-zinc-300 text-sm font-medium">
+                <p class="text-gray-700 dark:text-zinc-200 text-sm font-semibold">
                     {{ __('Informe os seus dados para criar uma conta') }}
                 </p>
             </div>
 
-            <x-auth-session-status class="text-center text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/50 dark:border-emerald-800/50 rounded-xl py-2.5 font-medium" :status="session('status')" />
+            <x-auth-session-status class="text-center text-sm text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 rounded-xl py-2.5 font-medium" :status="session('status')" />
 
             <form method="POST" action="{{ route('register.store') }}" class="flex flex-col gap-5">
                 @csrf
@@ -29,7 +29,7 @@
                     autofocus
                     icon="user"
                     placeholder="Ex: Manuel Pedro"
-                    class="text-gray-900 dark:text-white font-medium placeholder:text-gray-400 dark:placeholder:text-zinc-500"
+                    class="text-gray-900 dark:text-white font-semibold placeholder:text-gray-400 dark:placeholder:text-zinc-500"
                 />
 
                 <flux:input
@@ -40,7 +40,7 @@
                     required
                     icon="envelope"
                     placeholder="informe email verdadeiro"
-                    class="text-gray-900 dark:text-white font-medium placeholder:text-gray-400 dark:placeholder:text-zinc-500"
+                    class="text-gray-900 dark:text-white font-semibold placeholder:text-gray-400 dark:placeholder:text-zinc-500"
                 />
 
                 <div class="grid grid-cols-1 sm:grid-cols-1 gap-4">
@@ -52,7 +52,7 @@
                         icon="lock-closed"
                         placeholder="••••••••"
                         viewable
-                        class="text-gray-900 dark:text-white font-medium placeholder:text-gray-400 dark:placeholder:text-zinc-500"
+                        class="text-gray-900 dark:text-white font-semibold placeholder:text-gray-400 dark:placeholder:text-zinc-500"
                     />
 
                     <flux:input
@@ -63,11 +63,11 @@
                         icon="check-badge"
                         placeholder="••••••••"
                         viewable
-                        class="text-gray-900 dark:text-white font-medium placeholder:text-gray-400 dark:placeholder:text-zinc-500"
+                        class="text-gray-900 dark:text-white font-semibold placeholder:text-gray-400 dark:placeholder:text-zinc-500"
                     />
                 </div>
 
-                {{-- Botão Registar com estilo inline garantido --}}
+                {{-- Botão Registar com estilo garantido --}}
                 <div class="pt-2">
                     <button type="submit" 
                         style="background-color: #2563eb !important; color: #ffffff !important;"
@@ -77,9 +77,9 @@
                 </div>
             </form>
 
-            <div class="text-sm text-center text-gray-600 dark:text-zinc-400 mt-1 font-medium">
+            <div class="text-sm text-center text-gray-800 dark:text-zinc-300 mt-1 font-medium">
                 <span>{{ __('Já tem uma conta?') }}</span>
-                <a href="{{ route('login') }}" class="text-blue-600 dark:text-blue-400 font-bold hover:underline ml-1" wire:navigate>
+                <a href="{{ route('login') }}" class="text-blue-700 dark:text-blue-400 font-bold hover:underline ml-1" wire:navigate>
                     {{ __('Entrar aqui') }}
                 </a>
             </div>
