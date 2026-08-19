@@ -1,5 +1,5 @@
 <x-layouts::auth :title="__('Entrar')">
-    <div class="relative bg-white dark:bg-zinc-950 border border-gray-300 dark:border-zinc-800 p-8 sm:p-10 shadow-2xl rounded-tr-[60px] rounded-bl-[20px] rounded-br-[20px] rounded-tl-[20px] transition-colors duration-200 w-full max-w-md antialiased">
+    <div class="relative bg-white dark:bg-zinc-950 border border-gray-200/80 dark:border-zinc-800/50 p-8 sm:p-10 shadow-2xl rounded-tr-[60px] rounded-bl-[20px] rounded-br-[20px] rounded-tl-[20px] transition-colors duration-200 w-full max-w-md">
         
         <div class="absolute top-5 left-5">
             <flux:button :href="route('home')" variant="subtle" size="sm" icon="arrow-left" square wire:navigate inset="top left" title="Voltar ao Início" />
@@ -7,15 +7,15 @@
 
         <div class="flex flex-col gap-6 mt-4">
             <div class="text-center space-y-1.5">
-                <h2 class="text-2xl font-black uppercase tracking-wider text-gray-900 dark:text-white font-sans">
+                <h2 class="text-2xl font-black uppercase tracking-wider text-gray-900 dark:text-zinc-100 font-sans">
                     {{ __('Sign In') }}
                 </h2>
-                <p class="text-gray-700 dark:text-zinc-200 text-sm font-medium">
+                <p class="text-gray-500 dark:text-zinc-400 text-sm">
                     {{ __('Entrar com seu email e palavra passe') }}
                 </p>
             </div>
 
-            <x-auth-session-status class="text-center text-sm text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 rounded-xl py-2.5 font-medium" :status="session('status')" />
+            <x-auth-session-status class="text-center text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/50 dark:border-emerald-900/30 rounded-xl py-2.5 font-medium" :status="session('status')" />
 
             <form method="POST" action="{{ route('login.store') }}" class="flex flex-col gap-5">
                 @csrf
@@ -29,7 +29,6 @@
                     autofocus
                     icon="envelope"
                     placeholder="exemplo@gmail.com"
-                    class="text-gray-900 dark:text-white font-semibold"
                 />
                 <div class="flex flex-col gap-1">
                     <div class="relative">
@@ -42,13 +41,12 @@
                             icon="lock-closed"
                             placeholder="••••••••••••"
                             viewable
-                            class="text-gray-900 dark:text-white font-semibold"
                         />
                     </div>
                     
                     @if (Route::has('password.request'))
                         <div class="flex justify-end mt-1 px-1">
-                            <a class="text-xs text-blue-700 dark:text-blue-400 hover:underline font-bold transition-colors" href="{{ route('password.request') }}" wire:navigate>
+                            <a class="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium transition-colors" href="{{ route('password.request') }}" wire:navigate>
                                 {{ __('Esqueceu a palavra passe?') }}
                             </a>
                         </div>
@@ -56,17 +54,17 @@
                 </div>
 
                 <div class="flex items-center px-1 py-0.5">
-                    <label class="inline-flex items-center cursor-pointer select-none gap-2 text-sm text-gray-800 dark:text-zinc-200 font-semibold">
+                    <label class="inline-flex items-center cursor-pointer select-none gap-2 text-sm text-gray-700 dark:text-zinc-300 font-medium">
                         <input 
                             type="checkbox" 
                             name="remember" 
-                            class="w-4 h-4 rounded border-gray-400 dark:border-zinc-600 text-blue-600 focus:ring-0 bg-gray-100 dark:bg-zinc-800"
+                            class="w-4 h-4 rounded border-gray-300 dark:border-zinc-700 text-blue-600 focus:ring-0 bg-gray-100 dark:bg-zinc-900"
                         />
                         <span>{{ __('Manter sessão iniciada') }}</span>
                     </label>
                 </div>
 
-                {{-- Botão Entrar com estilo garantido no PC e Mobile --}}
+                {{-- Botão Entrar com estilo inline garantido --}}
                 <div class="pt-2">
                     <button type="submit" 
                         style="background-color: #2563eb !important; color: #ffffff !important;"
@@ -77,9 +75,9 @@
             </form>
 
             @if (Route::has('register'))
-                <div class="text-sm text-center text-gray-800 dark:text-zinc-300 mt-1 font-medium">
+                <div class="text-sm text-center text-gray-600 dark:text-zinc-400 mt-1">
                     <span>{{ __('Não tem uma conta?') }}</span>
-                    <a href="{{ route('register') }}" class="text-blue-700 dark:text-blue-400 font-bold hover:underline ml-1" wire:navigate>
+                    <a href="{{ route('register') }}" class="text-blue-600 dark:text-blue-400 font-bold hover:underline ml-1" wire:navigate>
                         {{ __('Registar aqui') }}
                     </a>
                 </div>

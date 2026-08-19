@@ -1,7 +1,10 @@
 # Estágio de Build para Assets (Vite)
 FROM node:20-alpine as assets_builder
 WORKDIR /app
+COPY package*.json ./
+RUN npm install
 COPY . .
+RUN npm run build
 
 # Estágio Final - PHP 8.4 Apache
 FROM php:8.4-apache
