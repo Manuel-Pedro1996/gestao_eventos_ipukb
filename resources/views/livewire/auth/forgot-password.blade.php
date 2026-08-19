@@ -1,36 +1,50 @@
-<x-layouts::auth :title="__('Forgot password')">
-    <div class="relative bg-gradient-to-br from-cyan-400 to-blue-600 p-8 shadow-2xl rounded-tr-[80px] rounded-bl-[20px] rounded-br-[20px] rounded-tl-[20px] text-white">
+<x-layouts::auth :title="__('Recuperar palavra-passe')">
+    <div class="relative bg-white dark:bg-zinc-950 border border-gray-200/80 dark:border-zinc-800/50 p-8 sm:p-10 shadow-2xl rounded-tr-[60px] rounded-bl-[20px] rounded-br-[20px] rounded-tl-[20px] transition-colors duration-200 w-full max-w-md">
         
-        <div class="flex flex-col gap-6">
-            <div class="text-center space-y-2">
-                <h2 class="text-2xl font-black uppercase tracking-widest text-white italic">Reset Password</h2>
-                <p class="text-cyan-100 text-sm italic">{{ __('Enter your email to receive a password reset link') }}</p>
+        <div class="absolute top-5 left-5">
+            <flux:button :href="route('login')" variant="subtle" size="sm" icon="arrow-left" square wire:navigate inset="top left" title="Voltar ao Login" />
+        </div>
+
+        <div class="flex flex-col gap-6 mt-4">
+            <div class="text-center space-y-1.5">
+                <h2 class="text-2xl font-black uppercase tracking-wider text-gray-900 dark:text-zinc-100 font-sans">
+                    {{ __('Reset Password') }}
+                </h2>
+                <p class="text-gray-500 dark:text-zinc-400 text-sm">
+                    {{ __('Informe o seu email para receber o link de recuperação') }}
+                </p>
             </div>
 
-            <x-auth-session-status class="text-center text-white bg-white/20 rounded-lg py-2" :status="session('status')" />
+            <x-auth-session-status class="text-center text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/50 dark:border-emerald-900/30 rounded-xl py-2.5 font-medium" :status="session('status')" />
 
-            <form method="POST" action="{{ route('password.email') }}" class="flex flex-col gap-6">
+            <form method="POST" action="{{ route('password.email') }}" class="flex flex-col gap-5">
                 @csrf
 
                 <flux:input
                     name="email"
-                    :label="__('Email address')"
+                    :label="__('Email')"
+                    :value="old('email')"
                     type="email"
                     required
                     autofocus
                     icon="envelope"
-                    class="!bg-transparent !border-black !text-white placeholder:text-cyan-100/50 rounded-full border-2"
-                    placeholder="email@example.com"
+                    placeholder="exemplo@gmail.com"
                 />
 
-                <flux:button type="submit" class="w-full !bg-black !text-blue-400 hover:!bg-zinc-900 rounded-full font-black text-lg py-6 shadow-xl uppercase tracking-tighter transition-transform active:scale-95">
-                    SEND LINK
-                </flux:button>
+                <div class="pt-2">
+                    <button type="submit" 
+                        style="background-color: #2563eb !important; color: #ffffff !important;"
+                        class="w-full font-bold text-sm py-3 rounded-xl shadow-lg hover:opacity-90 uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer">
+                        {{ __('Enviar Link') }}
+                    </button>
+                </div>
             </form>
 
-            <div class="text-xs text-center text-cyan-100 italic">
-                <span>{{ __('Return to') }}</span>
-                <flux:link :href="route('login')" class="text-white font-bold hover:underline" wire:navigate>{{ __('log in') }}</flux:link>
+            <div class="text-sm text-center text-gray-600 dark:text-zinc-400 mt-1">
+                <span>{{ __('Voltar para o') }}</span>
+                <a href="{{ route('login') }}" class="text-blue-600 dark:text-blue-400 font-bold hover:underline ml-1" wire:navigate>
+                    {{ __('Login') }}
+                </a>
             </div>
         </div>
     </div>
