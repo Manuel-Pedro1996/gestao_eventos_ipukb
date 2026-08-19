@@ -43,7 +43,6 @@
                     class="text-gray-900 dark:text-white font-medium placeholder:text-gray-400 dark:placeholder:text-zinc-500"
                 />
 
-                
                 <div class="grid grid-cols-1 sm:grid-cols-1 gap-4">
                     <flux:input
                         name="password"
@@ -68,15 +67,16 @@
                     />
                 </div>
 
-                {{-- BOTÃO REGISTER (Sombra e transição idênticas às do login) --}}
+                {{-- Botão Registar com estilo inline garantido --}}
                 <div class="pt-2">
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm py-3 rounded-xl shadow-lg shadow-blue-500/20 dark:shadow-none uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer">
+                    <button type="submit" 
+                        style="background-color: #2563eb !important; color: #ffffff !important;"
+                        class="w-full font-bold text-sm py-3 rounded-xl shadow-lg hover:opacity-90 uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer">
                         {{ __('Registar') }}
                     </button>
                 </div>
             </form>
 
-            {{-- LINK DE RETORNO AO LOGIN --}}
             <div class="text-sm text-center text-gray-600 dark:text-zinc-400 mt-1 font-medium">
                 <span>{{ __('Já tem uma conta?') }}</span>
                 <a href="{{ route('login') }}" class="text-blue-600 dark:text-blue-400 font-bold hover:underline ml-1" wire:navigate>

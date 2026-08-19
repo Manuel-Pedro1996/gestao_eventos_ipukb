@@ -54,26 +54,30 @@
                 </div>
 
                 <div class="flex items-center px-1 py-0.5">
-                    <label class="inline-flex items-center cursor-pointer select-none gap-2 text-sm text-gray-600 dark:text-zinc-400 font-medium">
+                    <label class="inline-flex items-center cursor-pointer select-none gap-2 text-sm text-gray-700 dark:text-zinc-300 font-medium">
                         <input 
                             type="checkbox" 
                             name="remember" 
-                            class="w-4 h-4 rounded border-gray-300 dark:border-zinc-700 text-blue-600 focus:ring-0 bg-transparent dark:bg-zinc-900"
+                            class="w-4 h-4 rounded border-gray-300 dark:border-zinc-700 text-blue-600 focus:ring-0 bg-gray-100 dark:bg-zinc-900"
                         />
                         <span>{{ __('Manter sessão iniciada') }}</span>
                     </label>
                 </div>
+
+                {{-- Botão Entrar com estilo inline garantido --}}
                 <div class="pt-2">
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm py-3 rounded-xl shadow-lg shadow-blue-500/10 dark:shadow-none uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer">
+                    <button type="submit" 
+                        style="background-color: #2563eb !important; color: #ffffff !important;"
+                        class="w-full font-bold text-sm py-3 rounded-xl shadow-lg hover:opacity-90 uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer">
                         {{ __('Entrar') }}
                     </button>
                 </div>
             </form>
 
             @if (Route::has('register'))
-                <div class="text-sm text-center text-gray-500 dark:text-zinc-500 mt-1">
+                <div class="text-sm text-center text-gray-600 dark:text-zinc-400 mt-1">
                     <span>{{ __('Não tem uma conta?') }}</span>
-                    <a href="{{ route('register') }}" class="text-blue-600 dark:text-blue-400 font-semibold hover:underline ml-1" wire:navigate>
+                    <a href="{{ route('register') }}" class="text-blue-600 dark:text-blue-400 font-bold hover:underline ml-1" wire:navigate>
                         {{ __('Registar aqui') }}
                     </a>
                 </div>
