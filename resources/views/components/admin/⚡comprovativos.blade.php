@@ -131,12 +131,14 @@ new class extends Component
                 </div>
 
                 <div class="flex gap-2">
-                    <button wire:click="aprovar({{ $inscricao->id }})" wire:confirm="Confirmar aprovação desta inscrição?"
-                        class="text-white bg-emerald-600 hover:bg-emerald-700 font-medium rounded-lg text-sm px-4 py-2">
+                    <button wire:click="aprovar({{ $inscricao->id }})" 
+                        wire:confirm="Confirmar aprovação desta inscrição?"
+                        class="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none dark:focus:ring-green-800 shadow-sm transition-colors">
                         Aprovar
                     </button>
+
                     <button wire:click="abrirRejeicao({{ $inscricao->id }})"
-                        class="text-red-600 bg-red-50 hover:bg-red-100 font-medium rounded-lg text-sm px-4 py-2">
+                        class="text-red-600 bg-red-50 hover:bg-red-100 font-medium rounded-lg text-sm px-4 py-2 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 transition-colors">
                         Rejeitar
                     </button>
                 </div>

@@ -214,18 +214,18 @@ new class extends Component
         </div>
 
         {{-- Tipo de Evento: Gratuito ou Pago --}}
-        <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
+        <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg border border-gray-300 dark:border-gray-700">
             <label class="inline-flex items-center {{ $temInscricoes ? 'cursor-not-allowed opacity-60' : 'cursor-pointer' }} select-none">
-                <input wire:model.live="pago" type="checkbox" @disabled($temInscricoes) class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600" />
-                <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-200">Este é um evento pago</span>
+                <input wire:model.live="pago" type="checkbox" @disabled($temInscricoes) class="w-4 h-4 text-blue-600 bg-gray-200 border-gray-400 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:bg-gray-700 dark:border-gray-500" />
+                <span class="ml-2 text-sm font-semibold text-gray-900 dark:text-white">Este é um evento pago</span>
             </label>
 
             @if ($temInscricoes)
-                <p class="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                <p class="text-xs text-amber-600 dark:text-amber-400 font-medium mt-1">
                     Este evento já tem inscrições — não é possível alterar entre pago/gratuito. {{ $pago ? 'Podes ajustar o preço abaixo.' : '' }}
                 </p>
             @else
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <p class="text-xs text-gray-600 dark:text-gray-300 mt-1">
                     Se marcado, os participantes terão de enviar um comprovativo de pagamento e a inscrição só fica ativa após aprovação de um gestor.
                 </p>
             @endif
@@ -233,7 +233,7 @@ new class extends Component
             @if ($pago)
                 <div class="mt-4">
                     <label for="preco" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Preço (Kz)</label>
-                    <input wire:model="preco" type="number" step="0.01" min="0" id="preco" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Ex: 5000.00" />
+                    <input wire:model="preco" type="number" step="0.01" min="0" id="preco" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Ex: 5000.00" />
                     @error('preco') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
                 </div>
             @endif
