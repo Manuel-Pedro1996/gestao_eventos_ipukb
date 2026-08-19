@@ -25,10 +25,11 @@ class PresencaConfirmadaNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-                    ->subject('Presença Confirmada! ✅')
-                    ->greeting('Olá, ' . $notifiable->name . '!')
-                    ->line('O teu check-in foi registado com sucesso no evento "' . $this->evento->titulo . '".')
-                    ->line('Obrigado pela tua participação ativa na nossa comunidade.')
-                    ->line('Esperamos que o conteúdo tenha sido valioso para o teu crescimento profissional!');
+            ->subject('Presença Confirmada! ✅')
+            ->greeting('Olá, ' . $notifiable->name . '!')
+            ->line('O teu check-in foi registado com sucesso no evento "' . $this->evento->titulo . '".')
+            ->line('Obrigado pela tua participação ativa na nossa comunidade.')
+            ->line('Esperamos que o conteúdo tenha sido valioso para o teu crescimento profissional!')
+            ->salutation('Cumprimentos, ' . config('app.name'));
     }
 }

@@ -46,17 +46,16 @@ class InscricaoConfirmadaNotification extends Notification
         $qrCodeSvg = $writer->writeString($qrContent);
 
         return (new MailMessage)
-                    ->subject('Inscrição Confirmada! 🎉')
-                    ->greeting('Olá, ' . $notifiable->name . '!')
-                    ->line('A tua inscrição no evento "' . $this->evento->titulo . '" foi realizada com sucesso.')
-                    ->line('Data do Evento: ' . Carbon::parse($this->evento->data_evento)->format('d/m/Y H:i'))
-                    
-                    ->line(new HtmlString('<strong>Código de Validação:</strong> <code style="background:#f4f4f5; padding:4px 8px; border-radius:4px; font-size:16px; color:#1e40af;">' . $this->inscricao->codigo_qr . '</code>'))
-                    
-                    ->line('Apresenta o código acima ou o QR Code em anexo à entrada do evento para validar a tua presença.')
-                    ->action('Ver Detalhes do Evento', route('eventos.index')) // Rota segura e garantida do index
-                    ->attachData($qrCodeSvg, 'ticket-qrcode.svg', [
-                        'mime' => 'image/svg+xml',
-                    ]);
+            ->subject('Inscrição Confirmada! 🎉')
+            ->greeting('Olá, ' . $notifiable->name . '!')
+            ->line('A tua inscrição no evento "' . $this->evento->titulo . '" foi realizada com sucesso.')
+            ->line('Data do Evento: ' . Carbon::parse($this->evento->data_evento)->format('d/m/Y H:i'))
+            ->line(new HtmlString('<strong>Código de Validação:</strong> <code style="background:#f4f4f5; padding:4px 8px; border-radius:4px; font-size:16px; color:#1e40af;">' . $this->inscricao->codigo_qr . '</code>'))
+            ->line('Apresenta o código acima ou o QR Code em anexo à entrada do evento para validar a tua presença.')
+            ->action('Ver Detalhes do Evento', route('eventos.index'))
+            ->attachData($qrCodeSvg, 'ticket-qrcode.svg', [
+                'mime' => 'image/svg+xml',
+            ])
+            ->salutation('Cumprimentos, ' . config('app.name'));
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\VerificarEmailNotification;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -34,6 +35,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Envia a notificação de verificação de e-mail personalizada.
+     */
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new VerificarEmailNotification());
+    }
+
+    /**
      * Get the user's initials
      */
     public function initials(): string
@@ -45,8 +54,8 @@ class User extends Authenticatable implements MustVerifyEmail
             ->implode('');
     }
 
-        public function posts()
-        {
-            return $this->hasMany(Post::class);
-        }
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
+    }
 }
