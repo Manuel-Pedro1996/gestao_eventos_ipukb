@@ -3,7 +3,6 @@
 use Livewire\Component;
 use App\Models\Evento;
 use Livewire\WithFileUploads;
-// Importações necessárias para o SDK Nativo do Cloudinary
 use Cloudinary\Configuration\Configuration;
 use Cloudinary\Api\Upload\UploadApi;
 
@@ -20,6 +19,9 @@ new class extends Component
     public int $capacidade_maxima = 0;
     public $foto;
 
+    public bool $pago = false;           // novo
+    public ?string $preco = null;        // novo
+
     public function salvar()
     {
         $this->validate([
@@ -30,22 +32,20 @@ new class extends Component
             'data_fim' => 'required|date|after_or_equal:data_evento',
             'vagas_disponiveis' => 'required|integer|min:0',
             'capacidade_maxima' => 'required|integer|min:1',
-            'foto' => 'nullable|image|max:2048', // Máximo 2MB
+            'foto' => 'nullable|image|max:2048',
+            'pago' => 'boolean',
+            'preco' => 'required_if:pago,true|nullable|numeric|min:0.01',
         ]);
 
         $caminhoFoto = null;
 
-        // Se o utilizador submeteu uma foto, fazemos o upload direto para o Cloudinary
         if ($this->foto) {
-            // 1. Inicializa as configurações com a variável guardada no teu .env
             Configuration::instance(env('CLOUDINARY_URL'));
 
-            // 2. Executa o upload usando o caminho real temporário do ficheiro no Fedora
             $resultado = (new UploadApi())->upload($this->foto->getRealPath(), [
-                'folder' => 'eventos' // Organiza os banners dentro de uma pasta na cloud
+                'folder' => 'eventos'
             ]);
 
-            // 3. Captura a URL pública e segura (HTTPS) gerada
             $caminhoFoto = $resultado['secure_url'];
         }
 
@@ -56,9 +56,11 @@ new class extends Component
             'data_evento' => $this->data_evento,
             'data_fim' => $this->data_fim,
             'capacidade_maxima' => $this->capacidade_maxima,
-            'vagas_disponiveis' => $this->vagas_disponiveis, // Corrigido para associar o input real
-            'foto' => $caminhoFoto, // Salva a URL completa (ex: https://res.cloudinary.com/...)
+            'vagas_disponiveis' => $this->vagas_disponiveis,
+            'foto' => $caminhoFoto,
             'organizador_id' => auth()->id(),
+            'pago' => $this->pago,                              // novo
+            'preco' => $this->pago ? $this->preco : null,        // novo
         ]);
 
         return redirect()->route('eventos.index')
@@ -86,7 +88,7 @@ new class extends Component
 
     <form wire:submit="salvar" enctype="multipart/form-data" class="space-y-5">
         
-        {{-- Área de Upload de Foto (Flowbite) --}}
+        {{-- Área de Upload de Foto --}}
         <div>
             <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Banner do Evento</label>
             <div class="flex items-center justify-center w-full">
@@ -156,6 +158,25 @@ new class extends Component
             <label for="vagas_disponiveis" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Vagas Iniciais</label>
             <input wire:model="vagas_disponiveis" type="number" id="vagas_disponiveis" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
             @error('vagas_disponiveis') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
+        </div>
+
+        {{-- Tipo de Evento: Gratuito ou Pago --}}
+        <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
+            <label class="inline-flex items-center cursor-pointer select-none">
+                <input wire:model.live="pago" type="checkbox" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600" />
+                <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-200">Este é um evento pago</span>
+            </label>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Se marcado, os participantes terão de enviar um comprovativo de pagamento e a inscrição só fica ativa após aprovação de um gestor.
+            </p>
+
+            @if ($pago)
+                <div class="mt-4">
+                    <label for="preco" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Preço (Kz)</label>
+                    <input wire:model="preco" type="number" step="0.01" min="0" id="preco" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Ex: 5000.00" />
+                    @error('preco') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
+                </div>
+            @endif
         </div>
 
         {{-- Botão Submeter --}}

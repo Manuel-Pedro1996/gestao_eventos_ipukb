@@ -12,23 +12,29 @@ new class extends Component
 
     public function mount(Evento $evento)
     {
+        // Bloqueia esta via para eventos pagos — devem usar o fluxo de comprovativo
+        if ($evento->pago) {
+            return redirect()->route('eventos.comprovativo', $evento->id);
+        }
+
         $this->evento = $evento;
     }
 
     public function realizarInscricao()
     {
-        DB::transaction(function () {
+        // Defesa extra: mesmo que alguém dispare via wire:click manualmente
+        if ($this->evento->pago) {
+            abort(403, 'Este evento requer envio de comprovativo de pagamento.');
+        }
 
-            // Atualiza evento com lock (evita overbooking)
+        DB::transaction(function () {
             $evento = Evento::lockForUpdate()->find($this->evento->id);
 
-            // 1. Verificar vagas
             if ($evento->vagas_disponiveis <= 0) {
                 session()->flash('erro', 'Sem vagas disponíveis.');
                 return;
             }
 
-            // 2. Verificar inscrição duplicada
             $existe = Inscricao::where('participante_id', auth()->id())
                 ->where('evento_id', $evento->id)
                 ->exists();
@@ -38,20 +44,18 @@ new class extends Component
                 return;
             }
 
-            // 3. Criar inscrição
             Inscricao::create([
                 'participante_id' => auth()->id(),
                 'evento_id' => $evento->id,
-                'codigo_qr' => 'QR-' . strtoupper(Str::random(10)),
+                'codigo_qr' => 'QR-' . strtoupper(Str::random(10)) . '-' . date('Y'),
                 'data_inscricao' => now(),
+                'status' => 'confirmada', // explícito — gratuito já nasce confirmado
             ]);
 
-            // 4. Atualizar vagas
             $evento->decrement('vagas_disponiveis');
-
         });
 
-        return redirect()->route('inscricaos.index')
+        return redirect()->route('eventos.index')
             ->with('success', 'Inscrição realizada com sucesso!');
     }
 };

@@ -31,6 +31,11 @@ new class extends Component
         $evento = Evento::findOrFail($eventoId);
         $user = Auth::user();
 
+        if ($evento->pago) {
+            abort(403, 'Este evento requer envio de comprovativo de pagamento.');
+        }
+
+
         if ($evento->data_fim && $evento->data_fim->isPast()) {
             session()->flash('erro', 'Este evento já foi encerrado.');
             return;
@@ -88,13 +93,16 @@ new class extends Component
         $userId = auth()->id();
 
         $query = Evento::query()
-            ->addSelect([
-                'inscricao_id' => Inscricao::select('id')
-                    ->where('participante_id', $userId)
-                    ->whereColumn('evento_id', 'eventos.id')
-                    ->limit(1)
-            ]);
-
+        ->addSelect([
+            'inscricao_id' => Inscricao::select('id')
+                ->where('participante_id', $userId)
+                ->whereColumn('evento_id', 'eventos.id')
+                ->limit(1),
+            'inscricao_status' => Inscricao::select('status')
+                ->where('participante_id', $userId)
+                ->whereColumn('evento_id', 'eventos.id')
+                ->limit(1),
+        ]);
         if ($this->search) {
             $query->where('eventos.titulo', 'like', '%' . $this->search . '%');
         }
@@ -233,20 +241,44 @@ new class extends Component
                             </div>
 
                             <div class="flex flex-col gap-2">
+                                @php
+                                    $jaInscrito = !is_null($evento->inscricao_id);
+                                    $status = $evento->inscricao_status; // null | pendente | confirmada | rejeitada
+                                @endphp
+
                                 @if ($evento->data_fim && $evento->data_fim->isPast())
                                     <button disabled class="w-full text-gray-400 bg-gray-100 cursor-not-allowed font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-gray-700 dark:text-gray-500">
                                         Evento Encerrado
                                     </button>
-                                @elseif ($evento->vagas_disponiveis <= 0 && !$jaInscrito)
-                                    <button disabled class="w-full text-red-500 bg-red-50 cursor-not-allowed font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-gray-900/30 dark:text-red-400">
-                                        Lotado
+
+                                @elseif ($jaInscrito && $status === 'pendente')
+                                    <button disabled class="w-full text-amber-700 bg-amber-50 cursor-not-allowed font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-amber-900/20 dark:text-amber-400">
+                                        Comprovativo em análise
                                     </button>
+
+                                @elseif ($jaInscrito && $status === 'rejeitada')
+                                    <a href="{{ route('eventos.comprovativo', $evento->id) }}" class="w-full text-white bg-orange-600 hover:bg-orange-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center block">
+                                        Comprovativo rejeitado — reenviar
+                                    </a>
+
                                 @elseif ($jaInscrito)
                                     <button disabled class="w-full text-emerald-800 bg-emerald-50 cursor-not-allowed font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-emerald-900/20 dark:text-emerald-400">
                                         Inscrição Confirmada
                                     </button>
+
+                                @elseif ($evento->vagas_disponiveis <= 0)
+                                    <button disabled class="w-full text-red-500 bg-red-50 cursor-not-allowed font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-gray-900/30 dark:text-red-400">
+                                        Lotado
+                                    </button>
+
+                                @elseif ($evento->pago)
+                                    <a href="{{ route('eventos.comprovativo', $evento->id) }}" class="w-full text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex items-center justify-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                        Enviar Comprovativo ({{ number_format($evento->preco, 2) }} Kz)
+                                    </a>
+
                                 @else
-                                    <button wire:click="inscrever({{ $evento->id }})" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 shadow-md shadow-blue-500/20 transition-colors cursor-pointer">
+                                    <button wire:click="inscrever({{ $evento->id }})" class="w-full text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
                                         Inscrever-se Agora
                                     </button>
                                 @endif

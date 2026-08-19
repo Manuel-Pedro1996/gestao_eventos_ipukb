@@ -20,7 +20,29 @@ class Inscricao extends Model
         'participante_id',
         'codigo_qr',
         'data_inscricao',
+        'status',                
+        'comprovativo', 
+        'comprovativo_hash',     
+        'banco',                 
+        'referencia_pagamento',  
+        'valor_pago',            
+        'data_pagamento',             
+        'observacao_avaliacao',  
+        'avaliado_por',          
+        'avaliado_em',  
     ];
+
+    protected $casts = [
+        'data_inscricao' => 'datetime',
+        'avaliado_em' => 'datetime',  
+        'data_pagamento' => 'date',   // novo
+        'valor_pago' => 'decimal:2',
+    ];
+
+    public function avaliador()
+    {
+        return $this->belongsTo(User::class, 'avaliado_por');
+    }
 
     // Relacionamento com o Evento
     public function evento()

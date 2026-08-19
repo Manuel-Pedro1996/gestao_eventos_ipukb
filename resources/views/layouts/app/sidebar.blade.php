@@ -40,6 +40,12 @@
                         Presenças
                     </flux:sidebar.item>
                     @endcanany
+
+                    @canany(['validar_pagamentos'])
+                     <flux:sidebar.item icon="identification" :href="route('admin.comprovativos')" :current="request()->routeIs('admin.comprovativos')" wire:navigate>
+                       validar_pagamentos
+                    </flux:sidebar.item>
+                    @endcanany
                     
                     @canany(['visualizar_clientes'])
                     <flux:sidebar.item icon="user-plus" :href="route('cliente.index')" :current="request()->routeIs('cliente.index')" wire:navigate>

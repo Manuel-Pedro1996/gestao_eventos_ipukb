@@ -20,7 +20,8 @@ new class extends Component
         $user = Auth::user();
         $evento = $inscricao->evento;
 
-        if ($evento) {
+        // Só devolve a vaga se a inscrição estava a ocupá-la de facto
+        if ($evento && $inscricao->status === 'confirmada') {
             $evento->increment('vagas_disponiveis');
         }
 
@@ -68,7 +69,6 @@ new class extends Component
         {{-- GRID DE INSCRIÇÕES --}}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach ($inscricaos as $inscricao)
-                {{-- Card Estilo Flowbite --}}
                 <div class="p-5 flex flex-col justify-between bg-white rounded-[2rem] border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 min-h-[320px] hover:shadow-xl transition-all duration-300">
                     <div>
                         <h2 class="text-lg font-bold text-gray-900 dark:text-white truncate">{{ $inscricao->evento->titulo }}</h2>
@@ -79,15 +79,37 @@ new class extends Component
                     </div>
 
                     <div class="my-4 flex flex-col items-center justify-center flex-1">
-                        @if($inscricao->presenca)
+                        @if ($inscricao->status === 'pendente')
+                            {{-- ESTADO: PAGAMENTO EM ANÁLISE — NÃO MOSTRA QR --}}
+                            <div class="w-full p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl text-center flex flex-col items-center justify-center">
+                                <svg class="w-8 h-8 text-amber-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span class="text-amber-800 dark:text-amber-400 text-sm font-bold block">Comprovativo em análise</span>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">O teu código só é gerado após aprovação do pagamento.</p>
+                            </div>
+
+                        @elseif ($inscricao->status === 'rejeitada')
+                            {{-- ESTADO: COMPROVATIVO REJEITADO --}}
+                            <div class="w-full p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/50 rounded-2xl text-center flex flex-col items-center justify-center">
+                                <svg class="w-8 h-8 text-red-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                <span class="text-red-800 dark:text-red-400 text-sm font-bold block">Comprovativo rejeitado</span>
+                                @if ($inscricao->observacao_avaliacao)
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ $inscricao->observacao_avaliacao }}</p>
+                                @endif
+                                <a href="{{ route('eventos.comprovativo', $inscricao->evento->id) }}" class="mt-3 text-xs font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-lg px-3 py-2">
+                                    Reenviar Comprovativo
+                                </a>
+                            </div>
+
+                        @elseif ($inscricao->presenca)
                             {{-- ESTADO: PRESENÇA CONFIRMADA --}}
                             <div class="w-full p-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/50 rounded-2xl text-center flex flex-col items-center justify-center animate-fade-in">
                                 <svg class="w-8 h-8 text-emerald-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 <span class="text-emerald-800 dark:text-emerald-400 text-sm font-bold block">Check-in Concluído!</span>
                                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Aproveite o evento.</p>
                             </div>
-                        @else
-                            {{-- ESTADO: PENDENTE (MOSTRA QR) --}}
+
+                        @elseif ($inscricao->status === 'confirmada' && $inscricao->codigo_qr)
+                            {{-- ESTADO: CONFIRMADA — MOSTRA QR --}}
                             <div class="flex flex-col items-center space-y-3 w-full">
                                 <div class="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center dark:bg-white">
                                     @php
@@ -119,7 +141,6 @@ new class extends Component
                                     <span class="text-xs font-mono font-bold text-gray-800 dark:text-gray-200">{{ $inscricao->codigo_qr }}</span>
                                 </div>
                                 
-                               
                                 <button 
                                     wire:click="deletarInscricao({{ $inscricao->id }})" 
                                     wire:confirm="Queres cancelar esta inscrição?" 
@@ -127,7 +148,6 @@ new class extends Component
                                 >
                                     Cancelar Inscrição
                                 </button>
-                           
                             </div>
                         @endif
                     </div>
@@ -155,7 +175,6 @@ new class extends Component
         </button>
     </div>
 
-    {{-- SCRIPT DE MÓDULO ÚNICO --}}
     <script>
         function inicializarBotaoTopo() {
             const mainElement = document.querySelector('main');

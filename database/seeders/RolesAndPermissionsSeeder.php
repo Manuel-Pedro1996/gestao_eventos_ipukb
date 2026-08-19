@@ -45,6 +45,9 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'editar_permissions']);
         Permission::firstOrCreate(['name' => 'eliminar_permissions']);
 
+
+        Permission::firstOrCreate(['name' => 'validar_pagamentos']);
+
         Role::firstOrCreate(['name' => 'moderador'])
             ->givePermissionTo([
                 'visualizar_qualquer_users',
@@ -58,6 +61,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'editar_posts',
                 'eliminar_posts',
                 'publicar_posts',
+                'validar_pagamentos',
             ]);
 
     }

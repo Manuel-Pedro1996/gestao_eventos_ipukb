@@ -16,11 +16,15 @@ class Evento extends Model
         'capacidade_maxima',
         'foto',
         'organizador_id',
+        'pago',      
+        'preco', 
     ];
 
     protected $casts = [
     'data_evento' => 'datetime',
     'data_fim' => 'datetime',
+    'pago' => 'boolean',   
+    'preco' => 'decimal:2', 
 ];
 
     public function organizador()

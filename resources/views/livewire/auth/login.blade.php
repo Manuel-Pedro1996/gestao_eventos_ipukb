@@ -1,14 +1,11 @@
 <x-layouts::auth :title="__('Entrar')">
-    {{-- Container Adaptável (Modo Claro: Fundo Branco | Modo Escuro: Fundo Zinco Profundo) --}}
     <div class="relative bg-white dark:bg-zinc-950 border border-gray-200/80 dark:border-zinc-800/50 p-8 sm:p-10 shadow-2xl rounded-tr-[60px] rounded-bl-[20px] rounded-br-[20px] rounded-tl-[20px] transition-colors duration-200 w-full max-w-md">
         
-        {{-- BOTÃO VOLTAR PARA A WELCOME --}}
         <div class="absolute top-5 left-5">
             <flux:button :href="route('home')" variant="subtle" size="sm" icon="arrow-left" square wire:navigate inset="top left" title="Voltar ao Início" />
         </div>
 
         <div class="flex flex-col gap-6 mt-4">
-            {{-- Header Suave e Moderno --}}
             <div class="text-center space-y-1.5">
                 <h2 class="text-2xl font-black uppercase tracking-wider text-gray-900 dark:text-zinc-100 font-sans">
                     {{ __('Sign In') }}
@@ -23,7 +20,6 @@
             <form method="POST" action="{{ route('login.store') }}" class="flex flex-col gap-5">
                 @csrf
 
-                {{-- CAMPO: EMAIL --}}
                 <flux:input
                     name="email"
                     :label="__('Email')"
@@ -34,8 +30,6 @@
                     icon="envelope"
                     placeholder="exemplo@gmail.com"
                 />
-
-                {{-- CAMPO: PALAVRA PASSE --}}
                 <div class="flex flex-col gap-1">
                     <div class="relative">
                         <flux:input
@@ -59,7 +53,6 @@
                     @endif
                 </div>
 
-                {{-- LEMBRAR-ME --}}
                 <div class="flex items-center px-1 py-0.5">
                     <label class="inline-flex items-center cursor-pointer select-none gap-2 text-sm text-gray-600 dark:text-zinc-400 font-medium">
                         <input 
@@ -70,8 +63,6 @@
                         <span>{{ __('Manter sessão iniciada') }}</span>
                     </label>
                 </div>
-
-                {{-- BOTÃO ENTRAR --}}
                 <div class="pt-2">
                     <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm py-3 rounded-xl shadow-lg shadow-blue-500/10 dark:shadow-none uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer">
                         {{ __('Entrar') }}
@@ -79,7 +70,6 @@
                 </div>
             </form>
 
-            {{-- LINK DE REGISTO --}}
             @if (Route::has('register'))
                 <div class="text-sm text-center text-gray-500 dark:text-zinc-500 mt-1">
                     <span>{{ __('Não tem uma conta?') }}</span>
