@@ -44,8 +44,6 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'criar_permissions']);
         Permission::firstOrCreate(['name' => 'editar_permissions']);
         Permission::firstOrCreate(['name' => 'eliminar_permissions']);
-
-
         Permission::firstOrCreate(['name' => 'validar_pagamentos']);
 
         Role::firstOrCreate(['name' => 'moderador'])
@@ -63,6 +61,11 @@ class RolesAndPermissionsSeeder extends Seeder
                 'publicar_posts',
                 'validar_pagamentos',
             ]);
+
+        // Role Super Admin com TODAS as permissões
+        $superAdminRole = Role::firstOrCreate(['name' => 'super_admin']);
+        $superAdminRole->givePermissionTo(Permission::all());
+    
 
     }
 }

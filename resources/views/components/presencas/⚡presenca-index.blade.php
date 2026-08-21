@@ -125,7 +125,7 @@ new class extends Component {
                                 {{ $evento->titulo }}
                             </th>
                             <td class="px-6 py-4 text-center">
-                                <span class="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 rounded-full text-xs font-bold">
+                                <span class="px-3 py-1 bg-blue-100 text-blue-900 dark:bg-blue-900/80 dark:text-blue-200 rounded-full text-xs font-bold">
                                     {{ $evento->total_presencas }} {{ Str::plural('presente', $evento->total_presencas) }}
                                 </span>
                             </td>

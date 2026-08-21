@@ -187,12 +187,12 @@
             <strong>Evento:</strong> {{ $evento->titulo }}
         </td>
         <td style="width: 50%; text-align: right;">
-            <strong>Data:</strong> {{ $evento->data_evento ? \Carbon\Carbon::parse($evento->data_evento)->format('d/m/Y H:i') : 'N/D' }}
+            <strong>Data do Evento:</strong> {{ $evento->data_evento ? \Carbon\Carbon::parse($evento->data_evento)->format('d/m/Y H:i') : 'N/D' }}
         </td>
     </tr>
     <tr>
         <td style="width: 50%; text-align: left;">
-            <strong>Local:</strong> {{ $evento->local ?? 'Não especificado' }}
+            <strong>Local do Evento:</strong> {{ $evento->local ?? 'Não especificado' }}
         </td>
         <td style="width: 50%; text-align: right;">
             <strong>Total de Presentes:</strong> {{ count($presencas) }}
@@ -204,7 +204,7 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 5%; text-align: center;">#</th>
+                <th style="width: 5%; text-align: center;">Ordem</th>
                 <th style="width: 45%;">Nome do Participante</th>
                 <th style="width: 30%;">E-mail</th>
                 <th style="width: 20%; text-align: center;">Hora de Check-in</th>

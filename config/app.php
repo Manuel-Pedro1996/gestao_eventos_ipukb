@@ -15,6 +15,18 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Super Admin Credentials
+    |--------------------------------------------------------------------------
+    */
+    'admin' => [
+        'name' => env('ADMIN_NAME', 'Super Admin'),
+        'email' => env('ADMIN_EMAIL', 'admin@ipukb.com'),
+        'password' => env('ADMIN_PASSWORD', 'password123'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment
