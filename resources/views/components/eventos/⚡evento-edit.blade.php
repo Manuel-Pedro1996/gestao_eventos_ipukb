@@ -23,9 +23,14 @@ new class extends Component
     public $foto;
     public $fotoAtual;
 
-    public bool $pago = false;              // novo
-    public ?string $preco = null;           // novo
-    public bool $temInscricoes = false;     // novo — trava a mudança de tipo
+    public bool $pago = false;
+    public ?string $preco = null;
+    public bool $temInscricoes = false;
+
+    public function rendering($view)
+    {
+        $view->title('Editar Evento');
+    }
 
     public function mount(Evento $evento)
     {
@@ -33,7 +38,7 @@ new class extends Component
         $this->titulo = $evento->titulo;
         $this->descricao = $evento->descricao;
         $this->local = $evento->local;
-        $this->data_evento = $evento->data_evento->format('Y-m-d\TH:i');
+        $this->data_evento = $evento->data_evento ? $evento->data_evento->format('Y-m-d\TH:i') : '';
         $this->data_fim = $evento->data_fim ? $evento->data_fim->format('Y-m-d\TH:i') : '';
         $this->vagas_disponiveis = $evento->vagas_disponiveis;
         $this->capacidade_maxima = $evento->capacidade_maxima;
@@ -69,7 +74,6 @@ new class extends Component
             'capacidade_maxima' => $this->capacidade_maxima,
         ];
 
-        // Se já existem inscrições, o tipo (pago/gratuito) não pode mudar — só o preço, se for pago
         if ($this->temInscricoes) {
             $dados['preco'] = $this->evento->pago ? $this->preco : null;
         } else {
@@ -107,146 +111,163 @@ new class extends Component
 };
 ?>
 
-<div class="p-6 w-full max-w-2xl mx-auto">
+<div class="w-full p-6 space-y-6">
+
+    {{-- HEADER FIXO (STICKY) --}}
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
             <h1 class="text-2xl font-bold tracking-tight text-blue-800 dark:text-blue-800">Editar Evento</h1>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Altere as informações do evento: {{ $evento->titulo }}</p>    
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Editar evento</p>    
         </div> 
 
         <div class="flex items-center gap-3 w-full md:w-auto">
-            <a href="{{ route('eventos.index') }}" class="w-full text-white bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-gray-600 dark:hover:bg-gray-700 focus:outline-none dark:focus:ring-gray-800 transition-colors cursor-pointer text-center">
+            <a href="{{ route('eventos.index') }}" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 transition-colors cursor-pointer text-center">
                 Voltar
             </a>
         </div>
-    </div>
+   </div>
 
-    <hr class="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700">
+  <hr class="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700">
+    <div class="w-full">
 
-    <form wire:submit="atualizar" enctype="multipart/form-data" class="space-y-5">
-        
-        <div>
-            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Banner do Evento</label>
-            <div class="flex items-center justify-center w-full">
-                @if ($foto instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile)
-                    <div class="relative w-full h-48 rounded-lg overflow-hidden border border-blue-500 group">
-                        <img src="{{ $foto->temporaryUrl() }}" class="w-full h-full object-cover">
-                        <label class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity duration-200">
-                            <span class="text-white font-medium text-sm">Trocar Imagem</span>
+        <form wire:submit="atualizar" enctype="multipart/form-data" class="space-y-6">
+            
+            {{-- BANNER DO EVENTO --}}
+            <div>
+                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Banner do Evento</label>
+                <div class="flex items-center justify-center w-full">
+                    @if ($foto)
+                        <div class="relative w-full h-48 rounded-2xl overflow-hidden border border-gray-300 dark:border-gray-600 shadow-sm">
+                            <img src="{{ $foto->temporaryUrl() }}" class="w-full h-full object-cover">
+                            <button type="button" wire:click="$set('foto', null)" class="absolute top-2 right-2 text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-full text-xs p-1.5 text-center inline-flex items-center shadow cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
+                    @elseif ($fotoAtual)
+                        <div class="relative w-full h-48 rounded-2xl overflow-hidden border border-gray-300 dark:border-gray-600 shadow-sm">
+                            <img src="{{ $fotoAtual }}" class="w-full h-full object-cover">
+                            <label class="absolute bottom-2 right-2 text-white bg-blue-600 hover:bg-blue-700 font-bold rounded-xl text-xs px-3 py-1.5 shadow cursor-pointer">
+                                Alterar Foto
+                                <input type="file" wire:model="foto" class="hidden" accept="image/*" />
+                            </label>
+                        </div>
+                    @else
+                        <label class="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-2xl cursor-pointer bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 border-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 transition-all">
+                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                <svg class="w-8 h-8 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Clique para carregar a foto do evento</p>
+                            </div>
                             <input type="file" wire:model="foto" class="hidden" accept="image/*" />
                         </label>
-                        <button type="button" wire:click="$set('foto', null)" class="absolute top-2 right-2 text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-full text-xs p-1.5 text-center inline-flex items-center shadow z-10">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        </button>
+                    @endif
+                </div>
+                @error('foto') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
+            </div>
+
+            {{-- TÍTULO --}}
+            <div>
+                <label for="titulo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Título</label>
+                <input wire:model="titulo" type="text" id="titulo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+                @error('titulo') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
+            </div>
+            
+            {{-- DESCRIÇÃO --}}
+            <div>
+                <label for="descricao" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Descrição</label>
+                <textarea wire:model="descricao" id="descricao" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-xl border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></textarea>
+                @error('descricao') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
+            </div>
+            
+            {{-- LOCAL E DATAS --}}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="local" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Local</label>
+                    <input wire:model="local" type="text" id="local" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+                    @error('local') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <label for="data_evento" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Início</label>
+                    <input wire:model="data_evento" type="datetime-local" id="data_evento" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                    @error('data_evento') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <label for="data_fim" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Término</label>
+                    <input wire:model="data_fim" type="datetime-local" id="data_fim" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                    @error('data_fim') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
+                </div>
+            </div>
+
+            {{-- VAGAS E CAPACIDADE --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="capacidade_maxima" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Capacidade Máxima</label>
+                    <input wire:model="capacidade_maxima" type="number" id="capacidade_maxima" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                    @error('capacidade_maxima') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <label for="vagas_disponiveis" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Vagas Disponíveis</label>
+                    <input wire:model="vagas_disponiveis" type="number" id="vagas_disponiveis" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                    @error('vagas_disponiveis') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
+                </div>
+            </div>
+
+            {{-- TIPO DE EVENTO --}}
+            <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl border border-gray-200 dark:border-gray-600 space-y-3">
+                <label class="inline-flex items-center cursor-pointer select-none">
+                    <input wire:model.live="pago" type="checkbox" @disabled($temInscricoes) class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:bg-gray-700 dark:border-gray-600 disabled:opacity-50" />
+                    <span class="ml-2 text-sm font-bold text-gray-900 dark:text-white">Este é um evento pago</span>
+                </label>
+
+                @if ($temInscricoes)
+                    <p class="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                        * Não podes alterar a modalidade (gratuito/pago) pois já existem inscrições efetuadas para este evento.
+                    </p>
+                @endif
+
+                @if ($pago)
+                    <div class="pt-2">
+                        <label for="preco" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Preço dos Ingressos (Kz)</label>
+                        <input wire:model="preco" type="number" step="0.01" min="0" id="preco" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Ex: 5000.00" />
+                        @error('preco') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
                     </div>
-                @elseif ($fotoAtual)
-                    <label class="relative w-full h-48 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600 cursor-pointer group block">
-                        <img src="{{ $fotoAtual }}" class="w-full h-full object-cover transition duration-200 group-hover:brightness-75">
-                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <div class="bg-blue-700 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 text-sm font-medium">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                Alterar Banner
-                            </div>
-                        </div>
-                        <input type="file" wire:model="foto" class="hidden" accept="image/*" />
-                    </label>
-                @else
-                    <label class="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 border-gray-300 dark:border-gray-600 dark:hover:bg-gray-500">
-                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                            <svg class="w-8 h-8 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            <p class="text-sm text-gray-500 dark:text-gray-400 italic">Clique para adicionar foto</p>
-                        </div>
-                        <input type="file" wire:model="foto" class="hidden" accept="image/*" />
-                    </label>
                 @endif
             </div>
-            @error('foto') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
-        </div>
 
-        {{-- Título --}}
-        <div>
-            <label for="titulo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Título</label>
-            <input wire:model="titulo" type="text" id="titulo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-            @error('titulo') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
-        </div>
-        
-        {{-- Descrição --}}
-        <div>
-            <label for="descricao" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Descrição</label>
-            <textarea wire:model="descricao" id="descricao" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"></textarea>
-            @error('descricao') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
-        </div>
-        
-        {{-- Grid de Inputs --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label for="local" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Local</label>
-                <input wire:model="local" type="text" id="local" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-                @error('local') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
+            {{-- SUBMIT --}}
+            <div class="pt-2">
+                <button type="submit" class="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-bold rounded-xl text-sm px-5 py-3 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 transition-all cursor-pointer shadow-md flex items-center justify-center gap-2">
+                    Salvar Alterações
+                </button>
             </div>
 
-            <div>
-                <label for="data_evento" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Início</label>
-                <input wire:model="data_evento" type="datetime-local" id="data_evento" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-                @error('data_evento') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
-            </div>
+        </form>
+    </div>
 
-            <div>
-                <label for="data_fim" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Término</label>
-                <input wire:model="data_fim" type="datetime-local" id="data_fim" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-                @error('data_fim') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
-            </div>
+    {{-- BOTÃO VOLTAR AO TOPO (Mobile) --}}
+    <div class="md:hidden">
+        <button id="btnVoltarTopoEditarEvento" x-on:click="const main = document.querySelector('main'); if(main) main.scrollTo({ top: 0, behavior: 'smooth' })" type="button" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 p-3.5 text-white bg-blue-600 rounded-full shadow-2xl hover:bg-blue-700 active:scale-95 transition-all focus:outline-none dark:bg-blue-500 dark:hover:bg-blue-600 border border-white/10" style="display: none;">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18"></path></svg>
+        </button>
+    </div>
 
-            <div>
-                <label for="capacidade_maxima" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Capacidade Máxima</label>
-                <input wire:model="capacidade_maxima" type="number" id="capacidade_maxima" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-                @error('capacidade_maxima') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
-            </div>
-        </div>
-
-        <div>
-            <div class="flex items-center gap-2 mb-2">
-                <label for="vagas_disponiveis" class="text-sm font-medium text-gray-900 dark:text-white">Vagas Atuais</label>
-                <span class="bg-orange-100 text-orange-800 text-xs font-medium px-2 py-0.5 rounded-sm dark:bg-orange-900 dark:text-orange-300">Cuidado ao alterar</span>
-            </div>
-            <input wire:model="vagas_disponiveis" type="number" id="vagas_disponiveis" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-            @error('vagas_disponiveis') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
-        </div>
-
-        {{-- Tipo de Evento: Gratuito ou Pago --}}
-        <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg border border-gray-300 dark:border-gray-700">
-            <label class="inline-flex items-center {{ $temInscricoes ? 'cursor-not-allowed opacity-60' : 'cursor-pointer' }} select-none">
-                <input wire:model.live="pago" type="checkbox" @disabled($temInscricoes) class="w-4 h-4 text-blue-600 bg-gray-200 border-gray-400 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:bg-gray-700 dark:border-gray-500" />
-                <span class="ml-2 text-sm font-semibold text-gray-900 dark:text-white">Este é um evento pago</span>
-            </label>
-
-            @if ($temInscricoes)
-                <p class="text-xs text-amber-600 dark:text-amber-400 font-medium mt-1">
-                    Este evento já tem inscrições — não é possível alterar entre pago/gratuito. {{ $pago ? 'Podes ajustar o preço abaixo.' : '' }}
-                </p>
-            @else
-                <p class="text-xs text-gray-600 dark:text-gray-300 mt-1">
-                    Se marcado, os participantes terão de enviar um comprovativo de pagamento e a inscrição só fica ativa após aprovação de um gestor.
-                </p>
-            @endif
-
-            @if ($pago)
-                <div class="mt-4">
-                    <label for="preco" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Preço (Kz)</label>
-                    <input wire:model="preco" type="number" step="0.01" min="0" id="preco" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Ex: 5000.00" />
-                    @error('preco') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
-                </div>
-            @endif
-        </div>
-
-        <div class="flex gap-3 pt-2">
-            <a href="{{ route('eventos.index') }}" class="flex-1 text-center text-gray-900 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-700 transition-colors cursor-pointer">
-                Cancelar
-            </a>
-            <button type="submit" class="flex-1 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 transition-colors cursor-pointer inline-flex items-center justify-center">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                Guardar Alterações
-            </button>
-        </div>
-    </form>
+    <script>
+        function initScrollEditarEvento() {
+            const main = document.querySelector('main');
+            const btn = document.getElementById('btnVoltarTopoEditarEvento');
+            if (main && btn) {
+                main.removeEventListener('scroll', handlerEditarEvento);
+                main.addEventListener('scroll', handlerEditarEvento);
+            }
+        }
+        function handlerEditarEvento() {
+            const main = document.querySelector('main');
+            const btn = document.getElementById('btnVoltarTopoEditarEvento');
+            if(main && btn) btn.style.display = main.scrollTop > 300 ? 'block' : 'none';
+        }
+        document.addEventListener('DOMContentLoaded', initScrollEditarEvento);
+        document.addEventListener('livewire:navigated', initScrollEditarEvento);
+    </script>
 </div>

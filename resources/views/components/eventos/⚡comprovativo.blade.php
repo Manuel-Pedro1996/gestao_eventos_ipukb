@@ -24,6 +24,11 @@ new class extends Component
         'Standard Bank', 'Banco Sol', 'Banco YETU', 'Banco Económico', 'Outro',
     ];
 
+    public function rendering($view)
+    {
+        $view->title('Enviar Comprovativo');
+    }
+
     public function mount(Evento $evento)
     {
         if (! $evento->pago) {
@@ -46,7 +51,7 @@ new class extends Component
     public function enviar()
     {
         $this->validate([
-            'comprovativo' => 'required|file|mimes:jpg,jpeg,png,pdf|max:4096',
+            'comprovativo' => 'required|file|mimes:jpg,jpeg,png,webp,heic,heif,pdf|max:10240',
             'banco' => 'required|string|max:100',
             'referencia_pagamento' => 'nullable|string|max:100',
             'valor_pago' => 'required|numeric|min:0.01',
@@ -66,9 +71,6 @@ new class extends Component
 
         $hash = hash_file('sha256', $this->comprovativo->getRealPath());
 
-        // Pré-checagem em PHP: rápida, dá mensagem amigável na maioria dos casos.
-        // Não elimina a corrida sozinha — é só a primeira linha de defesa, mais barata que
-        // deixar sempre o upload do ficheiro acontecer antes de sabermos que vai falhar.
         $inscricaoExistente = Inscricao::where('participante_id', auth()->id())
             ->where('evento_id', $this->evento->id)
             ->where('status', 'rejeitada')
@@ -112,10 +114,6 @@ new class extends Component
             'data_inscricao' => now(),
         ];
 
-        // Camada real anti-corrida: a transação + índices únicos da BD.
-        // Se duas submissões concorrentes chegarem aqui ao mesmo tempo com o mesmo
-        // hash ou a mesma referência, o MariaDB só deixa uma delas gravar — a outra
-        // recebe um erro de chave duplicada, que capturamos abaixo.
         try {
             DB::transaction(function () use ($inscricaoExistente, $dadosPagamento) {
                 if ($inscricaoExistente) {
@@ -128,7 +126,6 @@ new class extends Component
                 }
             });
         } catch (QueryException $e) {
-            // Apaga o ficheiro já gravado no disco, já que a inscrição não foi criada
             \Illuminate\Support\Facades\Storage::disk('public')->delete($caminho);
 
             if ($e->getCode() === '23000') {
@@ -151,71 +148,116 @@ new class extends Component
 };
 ?>
 
-<div class="p-6 w-full max-w-xl mx-auto">
-    <h1 class="text-2xl font-bold text-blue-800 dark:text-blue-500">Enviar Comprovativo</h1>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-        Evento: <strong>{{ $evento->titulo }}</strong> — Valor: {{ number_format($evento->preco, 2) }} Kz
-    </p>
+<div class="w-full">
 
-    <hr class="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700">
-
-    @if (session('erro'))
-        <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400">
-            {{ session('erro') }}
+    {{-- HEADER FIXO (STICKY) --}}
+    <div class="sticky top-0 z-10 bg-gray-50/95 dark:bg-[#09090b]/95 backdrop-blur-md px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+        <div class="flex flex-row justify-between items-center gap-4">
+            <div class="min-w-0">
+                <h1 class="text-xl md:text-2xl font-bold tracking-tight text-blue-600 dark:text-blue-500 truncate">Enviar Comprovativo</h1>
+                <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+                    Evento: <strong>{{ $evento->titulo }}</strong> — Valor: <strong>{{ number_format($evento->preco, 2) }} Kz</strong>
+                </p>
+            </div>
+            <a href="{{ route('eventos.index') }}" class="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm transition-all shrink-0">
+                Voltar
+            </a>
         </div>
-    @endif
+    </div>
 
-    <form wire:submit="enviar" class="space-y-4">
-        <div>
-            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Comprovativo (imagem ou PDF)</label>
-            <input type="file" wire:model="comprovativo" accept="image/*,.pdf"
-                class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 dark:bg-gray-700 dark:border-gray-600" />
-            @error('comprovativo') <span class="text-xs text-red-600 mt-1 block">{{ $message }}</span> @enderror
+    {{-- CONTEÚDO ROLÁVEL --}}
+    <div class="p-6 w-full space-y-6">
 
-            @if ($comprovativo && str_starts_with($comprovativo->getMimeType(), 'image'))
-                <img src="{{ $comprovativo->temporaryUrl() }}" class="mt-3 w-full max-h-64 object-contain rounded-lg border border-gray-200 dark:border-gray-700">
-            @endif
-        </div>
+        @if (session('erro'))
+            <div class="p-4 text-sm text-red-800 rounded-xl bg-red-50 dark:bg-gray-800 dark:text-red-400 font-medium border border-red-200 dark:border-red-800 shadow-sm flex items-center gap-2">
+                {{ session('erro') }}
+            </div>
+        @endif
 
-        <div>
-            <label for="banco" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Banco / Canal de Pagamento</label>
-            <select wire:model="banco" id="banco" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                <option value="">Seleciona o banco...</option>
-                @foreach ($bancos as $b)
-                    <option value="{{ $b }}">{{ $b }}</option>
-                @endforeach
-            </select>
-            @error('banco') <span class="text-xs text-red-600 mt-1 block">{{ $message }}</span> @enderror
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {{-- FORMULÁRIO DIRETO (SEM CARD) --}}
+        <form wire:submit="enviar" class="space-y-6">
+            
+            {{-- COMPROVATIVO --}}
             <div>
-                <label for="valor_pago" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Valor Pago (Kz)</label>
-                <input wire:model="valor_pago" type="number" step="0.01" min="0" id="valor_pago" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="{{ number_format($evento->preco, 2) }}" />
-                @error('valor_pago') <span class="text-xs text-red-600 mt-1 block">{{ $message }}</span> @enderror
+                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Comprovativo (imagem ou PDF)</label>
+                <input type="file" wire:model="comprovativo" accept="image/*,.pdf"
+                    class="block w-full text-sm text-gray-900 border border-gray-300 rounded-xl cursor-pointer bg-gray-50 dark:text-gray-400 dark:bg-gray-700 dark:border-gray-600 focus:outline-none" />
+                @error('comprovativo') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
+
+                @if ($comprovativo && str_starts_with($comprovativo->getMimeType(), 'image'))
+                    <img src="{{ $comprovativo->temporaryUrl() }}" class="mt-3 w-full max-h-64 object-contain rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                @endif
             </div>
 
+            {{-- BANCO --}}
             <div>
-                <label for="data_pagamento" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data do Pagamento</label>
-                <input wire:model="data_pagamento" type="date" id="data_pagamento" max="{{ now()->format('Y-m-d') }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-                @error('data_pagamento') <span class="text-xs text-red-600 mt-1 block">{{ $message }}</span> @enderror
+                <label for="banco" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Banco / Canal de Pagamento</label>
+                <select wire:model="banco" id="banco" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <option value="">Seleciona o banco...</option>
+                    @foreach ($bancos as $b)
+                        <option value="{{ $b }}">{{ $b }}</option>
+                    @endforeach
+                </select>
+                @error('banco') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
             </div>
-        </div>
 
-        <div>
-            <label for="referencia_pagamento" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                Nº de Transação / Referência <span class="text-gray-400 font-normal">(opcional)</span>
-            </label>
-            <input wire:model="referencia_pagamento" type="text" id="referencia_pagamento" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Ex: 60201 24020 07159 87351" />
-            <p class="text-xs text-gray-400 mt-1">Copia o número que aparece como "Transacção", "Referência", "Tr" ou "ID" no teu comprovativo.</p>
-            @error('referencia_pagamento') <span class="text-xs text-red-600 mt-1 block">{{ $message }}</span> @enderror
-        </div>
+            {{-- VALOR E DATA --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="valor_pago" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Valor Pago (Kz)</label>
+                    <input wire:model="valor_pago" type="number" step="0.01" min="0" id="valor_pago" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="{{ number_format($evento->preco, 2) }}" />
+                    @error('valor_pago') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
+                </div>
 
-        <button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5" wire:loading.attr="disabled" wire:target="enviar,comprovativo">
-            <span wire:loading.remove wire:target="enviar">Enviar Comprovativo</span>
-            <span wire:loading wire:target="enviar">A enviar...</span>
+                <div>
+                    <label for="data_pagamento" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data do Pagamento</label>
+                    <input wire:model="data_pagamento" type="date" id="data_pagamento" max="{{ now()->format('Y-m-d') }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                    @error('data_pagamento') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
+                </div>
+            </div>
+
+            {{-- REFERÊNCIA DE PAGAMENTO --}}
+            <div>
+                <label for="referencia_pagamento" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                    Nº de Transação / Referência <span class="text-gray-400 font-normal">(opcional)</span>
+                </label>
+                <input wire:model="referencia_pagamento" type="text" id="referencia_pagamento" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Ex: 60201 24020 07159 87351" />
+                <p class="text-xs text-gray-400 mt-1">Copia o número que aparece como "Transacção", "Referência", "Tr" ou "ID" no teu comprovativo.</p>
+                @error('referencia_pagamento') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
+            </div>
+
+            {{-- SUBMIT --}}
+            <div class="pt-2">
+                <button type="submit" wire:loading.attr="disabled" wire:target="enviar,comprovativo" class="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-bold rounded-xl text-sm px-5 py-3 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 transition-all cursor-pointer shadow-md flex items-center justify-center gap-2">
+                    <span wire:loading.remove wire:target="enviar">Enviar Comprovativo</span>
+                    <span wire:loading wire:target="enviar">A enviar comprovativo...</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {{-- BOTÃO VOLTAR AO TOPO (Mobile) --}}
+    <div class="md:hidden">
+        <button id="btnVoltarTopoEnviarComprovativo" x-on:click="const main = document.querySelector('main'); if(main) main.scrollTo({ top: 0, behavior: 'smooth' })" type="button" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 p-3.5 text-white bg-blue-600 rounded-full shadow-2xl hover:bg-blue-700 active:scale-95 transition-all focus:outline-none dark:bg-blue-500 dark:hover:bg-blue-600 border border-white/10" style="display: none;">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18"></path></svg>
         </button>
+    </div>
 
-        <a href="{{ route('eventos.index') }}" class="block text-center text-sm text-gray-500 hover:underline">Cancelar</a>
-    </form>
+    <script>
+        function initScrollEnviarComprovativo() {
+            const main = document.querySelector('main');
+            const btn = document.getElementById('btnVoltarTopoEnviarComprovativo');
+            if (main && btn) {
+                main.removeEventListener('scroll', handlerEnviarComprovativo);
+                main.addEventListener('scroll', handlerEnviarComprovativo);
+            }
+        }
+        function handlerEnviarComprovativo() {
+            const main = document.querySelector('main');
+            const btn = document.getElementById('btnVoltarTopoEnviarComprovativo');
+            if(main && btn) btn.style.display = main.scrollTop > 300 ? 'block' : 'none';
+        }
+        document.addEventListener('DOMContentLoaded', initScrollEnviarComprovativo);
+        document.addEventListener('livewire:navigated', initScrollEnviarComprovativo);
+    </script>
 </div>

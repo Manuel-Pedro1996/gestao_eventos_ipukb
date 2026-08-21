@@ -29,19 +29,31 @@ new class extends Component {
         return redirect()->route('presencas.imprimir', ['evento' => $this->evento_id]);
     }
 
-    public function with() {
-        return [
-            'eventos' => Evento::orderBy('titulo')->get(),
-            'presencas' => Presenca::with(['inscricao.evento', 'inscricao.participante'])
-                ->when($this->evento_id, function($query) {
-                    $query->whereHas('inscricao', function($q) {
-                        $q->where('evento_id', $this->evento_id);
-                    });
-                })
+        public function with()
+{
+    return [
+        // Retorna apenas eventos com check-in e ordena pelo check-in mais recente
+        'eventos' => Evento::whereHas('inscricoes.presenca')
+            ->addSelect(['ultimo_checkin' => Presenca::select('data_checkin')
+                ->whereColumn('inscricoes.evento_id', 'eventos.id')
+                ->join('inscricoes', 'inscricoes.id', '=', 'presencas.inscricao_id')
                 ->latest('data_checkin')
-                ->paginate(5),
-        ];
-    }
+                ->limit(1)
+            ])
+            ->orderByDesc('ultimo_checkin')
+            ->get(),
+
+        // Lista as presenças ordenadas pela data/hora real de check-in
+        'presencas' => Presenca::with(['inscricao.evento', 'inscricao.participante'])
+            ->when($this->evento_id, function ($query) {
+                $query->whereHas('inscricao', function ($q) {
+                    $q->where('evento_id', $this->evento_id);
+                });
+            })
+            ->latest('data_checkin')
+            ->paginate(5),
+    ];
+}
 }; ?>
 
 <div class="w-full">
