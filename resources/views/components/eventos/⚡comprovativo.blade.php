@@ -6,6 +6,8 @@ use App\Models\Evento;
 use App\Models\Inscricao;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\QueryException;
+use Cloudinary\Configuration\Configuration;
+use Cloudinary\Api\Upload\UploadApi;
 
 new class extends Component
 {
@@ -98,7 +100,14 @@ new class extends Component
             }
         }
 
-        $caminho = $this->comprovativo->store('comprovativos', 'public');
+        // Upload no Cloudinary
+        Configuration::instance(env('CLOUDINARY_URL'));
+        $uploadResult = (new UploadApi())->upload($this->comprovativo->getRealPath(), [
+            'folder' => 'comprovativos',
+            'resource_type' => 'auto',
+        ]);
+
+        $caminho = $uploadResult['secure_url'];
 
         $dadosPagamento = [
             'status' => 'pendente',
@@ -126,8 +135,6 @@ new class extends Component
                 }
             });
         } catch (QueryException $e) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($caminho);
-
             if ($e->getCode() === '23000') {
                 if (str_contains($e->getMessage(), 'comprovativo_hash')) {
                     session()->flash('erro', 'Este comprovativo já está associado a outra inscrição. Cada comprovativo só pode ser usado uma vez.');
@@ -149,8 +156,6 @@ new class extends Component
 ?>
 
 <div class="w-full">
-
-    {{-- HEADER FIXO (STICKY) --}}
     <div class="sticky top-0 z-10 bg-gray-50/95 dark:bg-[#09090b]/95 backdrop-blur-md px-6 py-4 border-b border-gray-200 dark:border-gray-800">
         <div class="flex flex-row justify-between items-center gap-4">
             <div class="min-w-0">
@@ -165,19 +170,14 @@ new class extends Component
         </div>
     </div>
 
-    {{-- CONTEÚDO ROLÁVEL --}}
     <div class="p-6 w-full space-y-6">
-
         @if (session('erro'))
             <div class="p-4 text-sm text-red-800 rounded-xl bg-red-50 dark:bg-gray-800 dark:text-red-400 font-medium border border-red-200 dark:border-red-800 shadow-sm flex items-center gap-2">
                 {{ session('erro') }}
             </div>
         @endif
 
-        {{-- FORMULÁRIO DIRETO (SEM CARD) --}}
         <form wire:submit="enviar" class="space-y-6">
-            
-            {{-- COMPROVATIVO --}}
             <div>
                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Comprovativo (imagem ou PDF)</label>
                 <input type="file" wire:model="comprovativo" accept="image/*,.pdf"
@@ -189,7 +189,6 @@ new class extends Component
                 @endif
             </div>
 
-            {{-- BANCO --}}
             <div>
                 <label for="banco" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Banco / Canal de Pagamento</label>
                 <select wire:model="banco" id="banco" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
@@ -201,7 +200,6 @@ new class extends Component
                 @error('banco') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
             </div>
 
-            {{-- VALOR E DATA --}}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label for="valor_pago" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Valor Pago (Kz)</label>
@@ -216,7 +214,6 @@ new class extends Component
                 </div>
             </div>
 
-            {{-- REFERÊNCIA DE PAGAMENTO --}}
             <div>
                 <label for="referencia_pagamento" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                     Nº de Transação / Referência <span class="text-gray-400 font-normal">(opcional)</span>
@@ -226,7 +223,6 @@ new class extends Component
                 @error('referencia_pagamento') <span class="text-xs text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
             </div>
 
-            {{-- SUBMIT --}}
             <div class="pt-2">
                 <button type="submit" wire:loading.attr="disabled" wire:target="enviar,comprovativo" class="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-bold rounded-xl text-sm px-5 py-3 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 transition-all cursor-pointer shadow-md flex items-center justify-center gap-2">
                     <span wire:loading.remove wire:target="enviar">Enviar Comprovativo</span>
@@ -235,29 +231,4 @@ new class extends Component
             </div>
         </form>
     </div>
-
-    {{-- BOTÃO VOLTAR AO TOPO (Mobile) --}}
-    <div class="md:hidden">
-        <button id="btnVoltarTopoEnviarComprovativo" x-on:click="const main = document.querySelector('main'); if(main) main.scrollTo({ top: 0, behavior: 'smooth' })" type="button" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 p-3.5 text-white bg-blue-600 rounded-full shadow-2xl hover:bg-blue-700 active:scale-95 transition-all focus:outline-none dark:bg-blue-500 dark:hover:bg-blue-600 border border-white/10" style="display: none;">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18"></path></svg>
-        </button>
-    </div>
-
-    <script>
-        function initScrollEnviarComprovativo() {
-            const main = document.querySelector('main');
-            const btn = document.getElementById('btnVoltarTopoEnviarComprovativo');
-            if (main && btn) {
-                main.removeEventListener('scroll', handlerEnviarComprovativo);
-                main.addEventListener('scroll', handlerEnviarComprovativo);
-            }
-        }
-        function handlerEnviarComprovativo() {
-            const main = document.querySelector('main');
-            const btn = document.getElementById('btnVoltarTopoEnviarComprovativo');
-            if(main && btn) btn.style.display = main.scrollTop > 300 ? 'block' : 'none';
-        }
-        document.addEventListener('DOMContentLoaded', initScrollEnviarComprovativo);
-        document.addEventListener('livewire:navigated', initScrollEnviarComprovativo);
-    </script>
 </div>

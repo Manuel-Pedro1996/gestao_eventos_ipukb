@@ -146,8 +146,6 @@ new class extends Component
 ?>
 
 <div class="w-full">
-
-    {{-- HEADER FIXO (STICKY) --}}
     <div class="sticky top-0 z-10 bg-gray-50/95 dark:bg-[#09090b]/95 backdrop-blur-md px-6 py-4 border-b border-gray-200 dark:border-gray-800">
         <div class="flex flex-row justify-between items-center gap-4">
             <div class="min-w-0">
@@ -157,9 +155,7 @@ new class extends Component
         </div>
     </div>
 
-    {{-- CONTEÚDO ROLÁVEL --}}
     <div class="p-6 space-y-6">
-
         @if (session('success'))
             <div class="p-4 text-sm text-green-800 rounded-xl bg-green-50 dark:bg-gray-800 dark:text-green-400 font-medium border border-green-200 dark:border-green-800 shadow-sm flex items-center gap-2">
                 {{ session('success') }}
@@ -172,7 +168,6 @@ new class extends Component
             </div>
         @endif
 
-        {{-- BARRA DE PESQUISA --}}
         <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm max-w-md">
             <label for="comprovativo-search" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Pesquisar Comprovativo</label>
             <div class="relative w-full">
@@ -185,7 +180,6 @@ new class extends Component
             </div>
         </div>
 
-        {{-- TABELA DE DADOS --}}
         <div class="relative overflow-x-auto shadow-sm border border-gray-200 dark:border-gray-700 rounded-[2rem] bg-white dark:bg-gray-800">
             <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -204,8 +198,11 @@ new class extends Component
                         <td class="px-6 py-4">
                             @if ($inscricao->comprovativo)
                                 @php
+                                    $urlComprovativo = str_starts_with($inscricao->comprovativo, 'http')
+                                        ? $inscricao->comprovativo
+                                        : Storage::url($inscricao->comprovativo);
                                     $extension = strtolower(pathinfo($inscricao->comprovativo, PATHINFO_EXTENSION));
-                                    $isPdf = $extension === 'pdf';
+                                    $isPdf = $extension === 'pdf' || str_contains($urlComprovativo, '.pdf');
                                 @endphp
 
                                 @if ($isPdf)
@@ -217,7 +214,7 @@ new class extends Component
                                     </button>
                                 @else
                                     <button wire:click="abrirDetalhes({{ $inscricao->id }})" type="button" class="inline-block relative group">
-                                        <img src="{{ Storage::url($inscricao->comprovativo) }}" alt="Comprovativo" class="w-12 h-12 object-cover rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm group-hover:opacity-80 transition-opacity">
+                                        <img src="{{ $urlComprovativo }}" alt="Comprovativo" class="w-12 h-12 object-cover rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm group-hover:opacity-80 transition-opacity">
                                     </button>
                                 @endif
                             @else
@@ -274,18 +271,19 @@ new class extends Component
             </table>
         </div>
 
-        {{-- PAGINAÇÃO --}}
         <div class="mt-4">
             {{ $inscricoes->links() }}
         </div>
     </div>
 
-    {{-- MODAL DE INSPEÇÃO/VERIFICAÇÃO COMPLETA --}}
     @if ($inscricaoSelecionada)
+        @php
+            $urlModal = str_starts_with($inscricaoSelecionada->comprovativo, 'http')
+                ? $inscricaoSelecionada->comprovativo
+                : Storage::url($inscricaoSelecionada->comprovativo);
+        @endphp
         <div class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
             <div class="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-3xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-2xl my-8">
-                
-                {{-- HEADER MODAL --}}
                 <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
                     <h3 class="text-lg font-bold text-gray-900 dark:text-white">
                         Verificar Comprovativo #{{ $inscricaoSelecionada->id }}
@@ -296,8 +294,6 @@ new class extends Component
                 </div>
 
                 <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[75vh] overflow-y-auto">
-                    
-                    {{-- LADO ESQUERDO: DADOS INSERIDOS PELO CLIENTE --}}
                     <div class="space-y-4">
                         <h4 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-gray-100 dark:border-gray-700 pb-2">
                             Dados do Pagamento
@@ -344,117 +340,65 @@ new class extends Component
 
                             <div>
                                 <span class="block text-xs text-gray-500 dark:text-gray-400">Nº Transação / Referência</span>
-                                <span class="font-mono text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-800 dark:text-gray-200 block mt-0.5 select-all">
-                                    {{ $inscricaoSelecionada->referencia_pagamento ?? 'Nenhuma referência informada' }}
+                                <span class="font-mono text-sm bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-800 dark:text-gray-200">
+                                    {{ $inscricaoSelecionada->referencia_pagamento ?? 'Nenhum informado' }}
                                 </span>
                             </div>
                         </div>
                     </div>
 
-                    {{-- LADO DIREITO: FICHEIRO DO COMPROVATIVO --}}
-                    <div class="space-y-4 flex flex-col">
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-gray-100 dark:border-gray-700 pb-2">
-                            Documento Anexo
-                        </h4>
+                    <div class="space-y-4 flex flex-col justify-between">
+                        <div>
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-gray-100 dark:border-gray-700 pb-2 mb-3">
+                                Documento do Comprovativo
+                            </h4>
 
-                        @if ($inscricaoSelecionada->comprovativo)
-                            @php
-                                $ext = strtolower(pathinfo($inscricaoSelecionada->comprovativo, PATHINFO_EXTENSION));
-                            @endphp
+                            @if ($inscricaoSelecionada->comprovativo)
+                                @php
+                                    $isPdfModal = str_contains($urlModal, '.pdf') || strtolower(pathinfo($inscricaoSelecionada->comprovativo, PATHINFO_EXTENSION)) === 'pdf';
+                                @endphp
 
-                            <div class="flex-1 bg-gray-50 dark:bg-gray-900 rounded-xl p-2 border border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center min-h-[220px]">
-                                @if ($ext === 'pdf')
-                                    <div class="text-center p-4">
-                                        <svg class="w-16 h-16 text-red-500 mx-auto mb-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"></path>
+                                @if ($isPdfModal)
+                                    <div class="p-6 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 text-center">
+                                        <svg class="w-12 h-12 text-red-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                                         </svg>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Ficheiro PDF do Comprovativo</p>
-                                        <a href="{{ Storage::url($inscricaoSelecionada->comprovativo) }}" target="_blank" class="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-md transition-all inline-block">
-                                            Abrir PDF em Nova Aba
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Este comprovativo é um ficheiro PDF.</p>
+                                        <a href="{{ $urlModal }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm transition-all">
+                                            Abrir PDF em nova aba
                                         </a>
                                     </div>
                                 @else
-                                    <a href="{{ Storage::url($inscricaoSelecionada->comprovativo) }}" target="_blank" class="w-full flex justify-center">
-                                        <img src="{{ Storage::url($inscricaoSelecionada->comprovativo) }}" alt="Comprovativo" class="max-h-64 object-contain rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-                                    </a>
-                                    <a href="{{ Storage::url($inscricaoSelecionada->comprovativo) }}" target="_blank" class="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:underline">
-                                        Abrir Imagem em tamanho real
-                                    </a>
+                                    <div class="relative group rounded-xl overflow-hidden border border-gray-200 dark:border-gray-600 bg-gray-900">
+                                        <img src="{{ $urlModal }}" alt="Comprovativo" class="w-full max-h-64 object-contain mx-auto">
+                                        <a href="{{ $urlModal }}" target="_blank" class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold">
+                                            Abrir imagem original ↗
+                                        </a>
+                                    </div>
                                 @endif
-                            </div>
-                        @else
-                            <div class="text-center py-12 text-gray-400 text-xs italic">
-                                Nenhum ficheiro anexado a esta inscrição.
-                            </div>
-                        @endif
+                            @endif
+                        </div>
+
+                        @can('validar_pagamentos')
+                        <div class="pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center gap-3">
+                            <button wire:click="aprovar({{ $inscricaoSelecionada->id }})" 
+                                wire:confirm="Confirmar aprovação desta inscrição?"
+                                type="button"
+                                style="background-color: #16a34a !important; color: #ffffff !important;"
+                                class="flex-1 py-2.5 text-xs font-bold rounded-xl shadow-sm hover:opacity-90 transition-all cursor-pointer text-center">
+                                Aprovar Inscrição
+                            </button>
+                            <button wire:click="abrirRejeicao({{ $inscricaoSelecionada->id }})"
+                                type="button"
+                                style="background-color: #fee2e2 !important; color: #dc2626 !important;"
+                                class="flex-1 py-2.5 text-xs font-bold rounded-xl shadow-sm hover:bg-red-200 transition-all cursor-pointer text-center">
+                                Rejeitar
+                            </button>
+                        </div>
+                        @endcan
                     </div>
-                </div>
-
-                {{-- FOOTER MODAL --}}
-                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                    <button wire:click="fecharDetalhes" type="button" class="px-4 py-2 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl transition-colors">
-                        Fechar
-                    </button>
-
-                    @can('validar_pagamentos')
-                    <div class="flex gap-2">
-                        <button wire:click="abrirRejeicao({{ $inscricaoSelecionada->id }})" type="button" class="px-4 py-2 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 rounded-xl transition-all">
-                            Rejeitar
-                        </button>
-                        <button wire:click="aprovar({{ $inscricaoSelecionada->id }})" type="button" class="px-4 py-2 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded-xl shadow-md transition-all">
-                            Aprovar Inscrição
-                        </button>
-                    </div>
-                    @endcan
-                </div>
-
-            </div>
-        </div>
-    @endif
-
-    {{-- MODAL DE REJEIÇÃO --}}
-    @if ($inscricaoParaRejeitar)
-        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md space-y-4 border border-gray-200 dark:border-gray-700 shadow-2xl">
-                <h2 class="text-lg font-bold text-gray-900 dark:text-white">Motivo da Rejeição</h2>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Esta observação será enviada por e-mail ao participante.</p>
-                <textarea wire:model="motivoRejeicao" rows="3"
-                    class="block p-3 w-full text-sm text-gray-900 bg-gray-50 rounded-xl border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-                    placeholder="Ex: Comprovativo ilegível, valor não corresponde..."></textarea>
-                <div class="flex justify-end gap-2 pt-2">
-                    <button wire:click="$set('inscricaoParaRejeitar', null)" type="button" class="px-4 py-2 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors">
-                        Cancelar
-                    </button>
-                    <button wire:click="confirmarRejeicao" type="button" class="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-lg shadow-red-500/20 transition-all">
-                        Confirmar Rejeição
-                    </button>
                 </div>
             </div>
         </div>
     @endif
-
-    {{-- BOTÃO VOLTAR AO TOPO (Mobile) --}}
-    <div class="md:hidden">
-        <button id="btnVoltarTopoComprovativos" x-on:click="const main = document.querySelector('main'); if(main) main.scrollTo({ top: 0, behavior: 'smooth' })" type="button" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 p-3.5 text-white bg-blue-600 rounded-full shadow-2xl hover:bg-blue-700 active:scale-95 transition-all focus:outline-none dark:bg-blue-500 dark:hover:bg-blue-600 border border-white/10" style="display: none;">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18"></path></svg>
-        </button>
-    </div>
-
-    <script>
-        function initScrollComprovativos() {
-            const main = document.querySelector('main');
-            const btn = document.getElementById('btnVoltarTopoComprovativos');
-            if (main && btn) {
-                main.removeEventListener('scroll', handlerComprovativos);
-                main.addEventListener('scroll', handlerComprovativos);
-            }
-        }
-        function handlerComprovativos() {
-            const main = document.querySelector('main');
-            const btn = document.getElementById('btnVoltarTopoComprovativos');
-            if(main && btn) btn.style.display = main.scrollTop > 300 ? 'block' : 'none';
-        }
-        document.addEventListener('DOMContentLoaded', initScrollComprovativos);
-        document.addEventListener('livewire:navigated', initScrollComprovativos);
-    </script>
 </div>
