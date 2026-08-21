@@ -92,6 +92,12 @@ new class extends Component
         $this->motivoRejeicao = '';
     }
 
+    public function fecharRejeicao()
+    {
+        $this->inscricaoParaRejeitar = null;
+        $this->motivoRejeicao = '';
+    }
+
     public function confirmarRejeicao()
     {
         abort_unless(auth()->user()->can('validar_pagamentos'), 403, 'Ação não autorizada.');
@@ -103,7 +109,7 @@ new class extends Component
         $inscricao = Inscricao::findOrFail($this->inscricaoParaRejeitar);
 
         if ($inscricao->status !== 'pendente') {
-            $this->inscricaoParaRejeitar = null;
+            $this->fecharRejeicao();
             return;
         }
 
@@ -120,7 +126,7 @@ new class extends Component
             report($e);
         }
 
-        $this->inscricaoParaRejeitar = null;
+        $this->fecharRejeicao();
         session()->flash('success', 'Inscrição rejeitada com sucesso!');
     }
 
@@ -184,10 +190,6 @@ new class extends Component
             <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
-                        <th scope="col" class="px-6 py-4">Comprovativo</th>
-                        <th scope="col" class="px-6 py-4">Participante</th>
-                        <th scope="col" class="px-6 py-4">Evento</th>
-                        <th scope="col" class="px-6 py-4">Banco / Referência</th>
                         <th scope="col" class="px-6 py-4">Valor Pago</th>
                         <th scope="col" class="px-6 py-4 w-48 text-right">Ações</th>
                     </tr>
@@ -195,43 +197,6 @@ new class extends Component
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                     @forelse ($inscricoes as $inscricao)
                     <tr class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                        <td class="px-6 py-4">
-                            @if ($inscricao->comprovativo)
-                                @php
-                                    $urlComprovativo = str_starts_with($inscricao->comprovativo, 'http')
-                                        ? $inscricao->comprovativo
-                                        : Storage::url($inscricao->comprovativo);
-                                    $extension = strtolower(pathinfo($inscricao->comprovativo, PATHINFO_EXTENSION));
-                                    $isPdf = $extension === 'pdf' || str_contains($urlComprovativo, '.pdf');
-                                @endphp
-
-                                @if ($isPdf)
-                                    <button wire:click="abrirDetalhes({{ $inscricao->id }})" type="button" class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-800 rounded-xl transition-all shadow-sm">
-                                        <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"></path>
-                                        </svg>
-                                        Ver PDF
-                                    </button>
-                                @else
-                                    <button wire:click="abrirDetalhes({{ $inscricao->id }})" type="button" class="inline-block relative group">
-                                        <img src="{{ $urlComprovativo }}" alt="Comprovativo" class="w-12 h-12 object-cover rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm group-hover:opacity-80 transition-opacity">
-                                    </button>
-                                @endif
-                            @else
-                                <span class="text-xs text-gray-400 italic">Sem ficheiro</span>
-                            @endif
-                        </td>
-                        <th scope="row" class="px-6 py-4 font-semibold text-gray-900 whitespace-nowrap dark:text-white">
-                            <div>{{ $inscricao->participante->name }}</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400 font-normal">{{ $inscricao->participante->email }}</div>
-                        </th>
-                        <td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">
-                            {{ $inscricao->evento->titulo }}
-                        </td>
-                        <td class="px-6 py-4 text-xs whitespace-nowrap">
-                            <div class="font-bold text-gray-800 dark:text-gray-200">{{ $inscricao->banco ?? 'N/D' }}</div>
-                            <div class="text-gray-500 dark:text-gray-400">{{ $inscricao->referencia_pagamento ?? 'Sem ref.' }}</div>
-                        </td>
                         <td class="px-6 py-4 text-xs font-bold text-gray-900 dark:text-white whitespace-nowrap">
                             {{ number_format($inscricao->valor_pago, 2) }} Kz
                         </td>
@@ -262,7 +227,7 @@ new class extends Component
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400 italic">
+                        <td colspan="2" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400 italic">
                             Nenhum comprovativo pendente encontrado.
                         </td>
                     </tr>
@@ -276,6 +241,7 @@ new class extends Component
         </div>
     </div>
 
+    {{-- Modal de Detalhes --}}
     @if ($inscricaoSelecionada)
         @php
             $urlModal = str_starts_with($inscricaoSelecionada->comprovativo, 'http')
@@ -397,6 +363,32 @@ new class extends Component
                         </div>
                         @endcan
                     </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Modal de Confirmar Rejeição --}}
+    @if ($inscricaoParaRejeitar)
+        <div class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md overflow-hidden border border-gray-200 dark:border-gray-700 shadow-2xl p-6 space-y-4">
+                <h3 class="text-lg font-bold text-red-600 dark:text-red-400">Rejeitar Inscrição</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                    Insira o motivo da rejeição (opcional). O participante receberá esta notificação.
+                </p>
+
+                <div>
+                    <textarea wire:model="motivoRejeicao" rows="3" class="w-full text-sm rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white p-3 focus:ring-red-500 focus:border-red-500" placeholder="Ex: Valor incorreto, comprovativo ilegível..."></textarea>
+                    @error('motivoRejeicao') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <button wire:click="fecharRejeicao" type="button" class="px-4 py-2 text-xs font-semibold text-gray-700 bg-gray-100 dark:bg-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200">
+                        Cancelar
+                    </button>
+                    <button wire:click="confirmarRejeicao" type="button" class="px-4 py-2 text-xs font-bold text-white bg-red-600 rounded-xl hover:bg-red-700">
+                        Confirmar Rejeição
+                    </button>
                 </div>
             </div>
         </div>
